@@ -2,34 +2,32 @@ import cv2
 from datetime import datetime
 import platform
 
+import cv2
+import platform
+
 # TODO refactor for better camera idx ignore to avoid undesired connected cameras
 def initialize_cameras(ignore_camera_idx: int = None) -> list:
     camera_array = []
 
-    # Detrmine the operating system
+    # Determine the operating system
     os_name = platform.system()
 
     # In your initialize_cameras function
-    for idx in range(7):
-        if idx == 1:
+    for idx in range(10):
+        if (os_name == "Windows" and idx == 0) or (os_name != "Windows" and idx == 1): # Trash code. Delete after testing.
             continue
+
         print(f"Checking camera index {idx}...")
-
-        if os_name == "Windows":
-            if not cv2.VideoCapture(idx, cv2.CAP_DSHOW).isOpened():
-                print(f"Camera index {idx} is not available.")
-                continue
-            cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
-        else: # for MacOs, Linux or any other Unix-based OS
-            cap = cv2.VideoCapture(idx)
-
-        cap.set(cv2.CAP_PROP_FPS, 5)
-        print("Camera found")
-       
+        
+        # Initialize VideoCapture based on the OS
+        cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW) if os_name == "Windows" else cv2.VideoCapture(idx)
         
         if not cap.isOpened():
             print(f"Camera index {idx} is not available.")
-            break
+            continue
+        
+        cap.set(cv2.CAP_PROP_FPS, 5)
+        print("Camera found")
         
         if ignore_camera_idx is not None and idx == ignore_camera_idx:
             cap.release()
@@ -38,6 +36,9 @@ def initialize_cameras(ignore_camera_idx: int = None) -> list:
         camera_array.append(cap)
 
     return camera_array
+
+# Rest of your code
+
 
 def camera_text_overlay(frame, camera_name):
     font = cv2.FONT_HERSHEY_SIMPLEX
@@ -62,7 +63,7 @@ def main():
                     print("Error: Could not read frames from one or more cameras.")
                     break
                 # Resize all frames to a common width and height TODO: crop
-                width, height = 640, 360
+                width, height = 320, 180
                 frame = cv2.resize(frame, (width, height))
                 frames.append(frame)
 
