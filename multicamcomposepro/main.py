@@ -1,20 +1,30 @@
 import cv2
 from datetime import datetime
-
+import platform
 
 # TODO refactor for better camera idx ignore to avoid undesired connected cameras
 def initialize_cameras(ignore_camera_idx: int = None) -> list:
     camera_array = []
+
+    # Detrmine the operating system
+    os_name = platform.system()
 
     # In your initialize_cameras function
     for idx in range(5):
         if idx == 0:
             continue
         print(f"Checking camera index {idx}...")
-        if not cv2.VideoCapture(idx, cv2.CAP_DSHOW).isOpened():
-            print(f"Camera index {idx} is not available.")
-            continue
-        cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+
+        if os_name == "Windows":
+            if not cv2.VideoCapture(idx, cv2.CAP_DSHOW).isOpened():
+                print(f"Camera index {idx} is not available.")
+                continue
+            cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+        else: # for MacOs, Linux or any other Unix-based OS
+            if not cv2.VideoCapture(idx).isOpened():
+                print(f"Camera index {idx} is not available.")
+                continue
+            cap = cv2.VideoCapture(idx)
 
         cap.set(cv2.CAP_PROP_FPS, 5)
         print("Camera found")
