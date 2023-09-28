@@ -10,8 +10,8 @@ def initialize_cameras(ignore_camera_idx: int = None) -> list:
     os_name = platform.system()
 
     # In your initialize_cameras function
-    for idx in range(5):
-        if idx == 0:
+    for idx in range(7):
+        if idx == 1:
             continue
         print(f"Checking camera index {idx}...")
 
@@ -21,9 +21,6 @@ def initialize_cameras(ignore_camera_idx: int = None) -> list:
                 continue
             cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
         else: # for MacOs, Linux or any other Unix-based OS
-            if not cv2.VideoCapture(idx).isOpened():
-                print(f"Camera index {idx} is not available.")
-                continue
             cap = cv2.VideoCapture(idx)
 
         cap.set(cv2.CAP_PROP_FPS, 5)
