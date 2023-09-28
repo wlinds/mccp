@@ -6,10 +6,22 @@ from datetime import datetime
 def initialize_cameras(ignore_camera_idx: int = None) -> list:
     camera_array = []
 
-    for idx in range(100):
-        cap = cv2.VideoCapture(idx)
+    # In your initialize_cameras function
+    for idx in range(5):
+        if idx == 0:
+            continue
+        print(f"Checking camera index {idx}...")
+        if not cv2.VideoCapture(idx, cv2.CAP_DSHOW).isOpened():
+            print(f"Camera index {idx} is not available.")
+            continue
+        cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+
+        cap.set(cv2.CAP_PROP_FPS, 5)
+        print("Camera found")
+       
         
         if not cap.isOpened():
+            print(f"Camera index {idx} is not available.")
             break
         
         if ignore_camera_idx is not None and idx == ignore_camera_idx:
