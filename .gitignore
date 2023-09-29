@@ -163,3 +163,4 @@ cython_debug/
 *DS_Store
 *venv
 data_warehouse/
+journal.md
