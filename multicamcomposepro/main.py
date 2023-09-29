@@ -5,6 +5,12 @@ import platform
 import cv2
 import platform
 
+#TODO Summarized:
+# Need to find the best way to ignore the internal webcamera (if desired) for any manufacturer/OS
+# Need to find the best way to identify multiple cameras and mark them as the correct camera within script
+# Make modular grid of camera streams (i.e. not only a row, but columns as well)
+
+
 # TODO refactor for better camera idx ignore to avoid undesired connected cameras
 def initialize_cameras(ignore_camera_idx: int = None) -> list:
     camera_array = []
@@ -37,7 +43,7 @@ def initialize_cameras(ignore_camera_idx: int = None) -> list:
 
     return camera_array
 
-# Rest of your code
+# Rest of your code <- rest of whose code?? are u pastin' da gpt again
 
 
 def camera_text_overlay(frame, camera_name):
