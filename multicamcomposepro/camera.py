@@ -5,7 +5,7 @@ import logging
 import platform
 
 logging.basicConfig(level=logging.INFO)
-
+os_name = platform.system()
 
 class CameraManager:
     def __init__(self, warehouse, num_pics=1, num_cameras=6):
@@ -25,8 +25,11 @@ class CameraManager:
         image_counter = 0
         for _ in range(self.num_pics):
             for cam_idx, angle in enumerate(self.camera_angles):
-                if cam_idx == 0 and platform.system() == "Windows":
+                if (os_name == "Windows" and cam_idx == 0) or (
+                    os_name != "Windows" and cam_idx == 1
+                ):  # Trash code. Delete after testing.
                     continue
+                
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
 
@@ -44,7 +47,12 @@ class CameraManager:
         angle_folder_path = os.path.join(folder_path, angle)
         os.makedirs(angle_folder_path, exist_ok=True)
 
-        cap = cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
+        cap = (
+            cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
+            if os_name == "Windows"
+            else cv2.VideoCapture(cam_idx)
+        )
+
         ret, frame = cap.read()
         cap.release()
 
