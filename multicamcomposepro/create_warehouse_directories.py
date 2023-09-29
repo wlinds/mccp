@@ -14,6 +14,7 @@ class WarehouseBuilder:
         self.created_dirs = []
         self.created_sub_dirs = []
         self.created_nested_sub_dirs = []
+        self.anomalies = [] # Used in camera.py
 
     def create_directory(self, path: str):
         """
