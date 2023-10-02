@@ -9,6 +9,15 @@ class CameraIdentifier:
         self.camera_mapping = {}
         self.os_name = system()
 
+
+    def load_from_json(self, filename="camera_config.json"):
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+                return data.get("Camera Order", {})
+        else:
+            return {}
+
     def identify_camera(self, index):
         cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
         while True:
@@ -21,10 +30,10 @@ class CameraIdentifier:
 
     def save_to_json(self, filename="camera_config.json"):
         with open(filename, "w") as f:
-            json.dump(self.camera_mapping, f)
+            json.dump({"Camera Order": self.camera_mapping}, f)
 
     def get_camera_count(self):
-        max_tested = 6  # Change this if you have more than 6 cameras
+        max_tested = 10  # Change this if you have more than 10 cameras
         for i in range(max_tested):
             cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
             if not cap.isOpened():
@@ -35,16 +44,18 @@ class CameraIdentifier:
     def identify_all_cameras(self):
         number_cameras = self.get_camera_count()
         for i in range(number_cameras):
-            if (self.os_name == "Windows" and i == 0) or (
-                self.os_name != "Windows" and i == 1
-            ):
-                continue
             print(
-                f"Identifying camera at index {i-1}. Press 'q' to move to the next camera."
+                f"Identifying camera at index {i}. Press 'q' to move to the next camera."
             )
             self.identify_camera(i)
-            identifier = input(f"Enter a unique identifier for camera at index {i-1}: ")
-            self.camera_mapping[identifier] = i - 1
+            identifier = input(f"Enter a unique identifier for camera at index {i}: ")
+            if identifier.lower() == 'skip':
+                if 'skip' in self.camera_mapping:
+                    self.camera_mapping['skip'].append(i)
+                else:
+                    self.camera_mapping['skip'] = [i]
+            else:
+                self.camera_mapping[identifier] = i
 
 
 if __name__ == "__main__":
