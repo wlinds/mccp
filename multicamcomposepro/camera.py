@@ -7,6 +7,7 @@ import platform
 logging.basicConfig(level=logging.INFO)
 os_name = platform.system()
 
+
 class CameraManager:
     def __init__(self, warehouse, num_pics=1, num_cameras=6):
         self.warehouse = warehouse
@@ -20,7 +21,7 @@ class CameraManager:
             "front_left",
             "front_right",
         ]
-
+    
     def capture_images(self, folder_path):
         image_counter = 0
         for _ in range(self.num_pics):
@@ -34,7 +35,7 @@ class CameraManager:
             image_counter += 1
 
     def capture_good_object(self):
-        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", "object_name")
+        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name)
         for folder_type in ["test", "train"]:
             input(
                 f"Press Enter to capture images for good object in {folder_type} folder:"
@@ -67,8 +68,11 @@ class CameraManager:
         logging.info(f"Saved image {filename}")
 
     def run(self):
+        print("Running RUN!")
+        print(self.warehouse.anomalies)
+
         self.capture_good_object()
-        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", "object_name")
+        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name)
         for anomaly in self.warehouse.anomalies:
             input(f"Press Enter to capture images for anomaly: {anomaly}")
             anomaly_folder = os.path.join(base_dir, "test", anomaly)
@@ -78,6 +82,6 @@ class CameraManager:
 
 if __name__ == "__main__":
     warehouse = WarehouseBuilder()
-    warehouse.build("object_name", ["anomaly1", "anomaly2"])
+    warehouse.build("i_m_the_best", ["Wow_bad", "wow_terrible", "wow_very_bad", "wow_very_very_bad"])
     camera_manager = CameraManager(warehouse)
     camera_manager.run()
