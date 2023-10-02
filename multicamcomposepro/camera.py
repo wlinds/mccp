@@ -11,6 +11,7 @@ logging.basicConfig(level=logging.INFO)
 os_name = system()
 
 
+
 class CameraManager:
     def __init__(self, warehouse, num_pics=1):
         self.warehouse = warehouse
@@ -56,6 +57,7 @@ class CameraManager:
                     sorted_angles[index] = self.camera_angles[int(identifier)]
             self.camera_angles = sorted_angles
             print("Sorted Camera Angles:", self.camera_angles)  # Debugging line
+
 
 
 

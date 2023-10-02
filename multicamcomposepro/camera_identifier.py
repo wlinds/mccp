@@ -2,29 +2,20 @@ import cv2
 import json
 from platform import system
 import os
-
+import threading
 
 class CameraIdentifier:
     def __init__(self):
         self.camera_mapping = {}
         self.os_name = system()
 
-
-    def load_from_json(self, filename="camera_config.json"):
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-                return data.get("Camera Order", {})
-        else:
-            return {}
-
-    def identify_camera(self, index):
+    def identify_camera(self, index, event):
         cap = (
             cv2.VideoCapture(index, cv2.CAP_DSHOW)
             if self.os_name == "Windows"
             else cv2.VideoCapture(index)
         )
-        while True:
+        while not event.is_set():
             ret, frame = cap.read()
             cv2.imshow(f"Camera {index}", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -52,11 +43,12 @@ class CameraIdentifier:
     def identify_all_cameras(self):
         number_cameras = self.get_camera_count()
         for i in range(number_cameras):
-            print(
-                f"Identifying camera at index {i}. Press 'q' to move to the next camera."
-            )
-            self.identify_camera(i)
+            event = threading.Event()
+            thread = threading.Thread(target=self.identify_camera, args=(i, event))
+            thread.start()
             identifier = input(f"Enter a unique identifier for camera at index {i}: ")
+            event.set()
+            thread.join()
             if identifier.lower() == 'skip':
                 if 'skip' in self.camera_mapping:
                     self.camera_mapping['skip'].append(i)
@@ -65,16 +57,7 @@ class CameraIdentifier:
             else:
                 self.camera_mapping[identifier] = i
 
-
 if __name__ == "__main__":
     camera_identifier = CameraIdentifier()
-
-    # Manually identify each camera and assign an identifier
     camera_identifier.identify_all_cameras()
-
-    # Save to JSON
     camera_identifier.save_to_json()
-
-    # Load from JSON
-    # camera_identifier.load_from_json()
-    # print(f"Loaded cameras from JSON: {camera_identifier.camera_mapping}")
