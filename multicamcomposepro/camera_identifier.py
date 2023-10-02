@@ -3,7 +3,7 @@ import json
 from platform import system
 import os
 
-
+os_name = system()
 class CameraIdentifier:
     def __init__(self):
         self.camera_mapping = {}
@@ -19,7 +19,11 @@ class CameraIdentifier:
             return {}
 
     def identify_camera(self, index):
-        cap = cv2.VideoCapture(index, cv2.CAP_DSHOW)
+        cap = (
+            cv2.VideoCapture(index, cv2.CAP_DSHOW)
+            if os_name == "Windows"
+            else cv2.VideoCapture(index)
+        )
         while True:
             ret, frame = cap.read()
             cv2.imshow(f"Camera {index}", frame)
