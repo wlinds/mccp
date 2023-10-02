@@ -3,7 +3,7 @@ import json
 from platform import system
 import os
 
-os_name = system()
+
 class CameraIdentifier:
     def __init__(self):
         self.camera_mapping = {}
@@ -21,7 +21,7 @@ class CameraIdentifier:
     def identify_camera(self, index):
         cap = (
             cv2.VideoCapture(index, cv2.CAP_DSHOW)
-            if os_name == "Windows"
+            if self.os_name == "Windows"
             else cv2.VideoCapture(index)
         )
         while True:
@@ -40,9 +40,9 @@ class CameraIdentifier:
         max_tested = 10  # Change this if you have more than 10 cameras
         for i in range(max_tested):
             cap = (
-                cv2.VideoCapture(max_tested, cv2.CAP_DSHOW)
-                if os_name == "Windows"
-                else cv2.VideoCapture(max_tested)
+                cv2.VideoCapture(i, cv2.CAP_DSHOW)
+                if self.os_name == "Windows"
+                else cv2.VideoCapture(i)
             )
             if not cap.isOpened():
                 cap.release()
