@@ -39,7 +39,11 @@ class CameraIdentifier:
     def get_camera_count(self):
         max_tested = 10  # Change this if you have more than 10 cameras
         for i in range(max_tested):
-            cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)
+            cap = (
+                cv2.VideoCapture(max_tested, cv2.CAP_DSHOW)
+                if os_name == "Windows"
+                else cv2.VideoCapture(max_tested)
+            )
             if not cap.isOpened():
                 cap.release()
                 return i
