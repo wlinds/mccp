@@ -15,11 +15,11 @@ class CameraManager:
         self.num_cameras = num_cameras
         self.camera_angles = [
             "skip",
-            "left",
-            "right",
-            "front",
-            "front_left",
-            "front_right",
+            "cam_0_left",
+            "cam_1_right",
+            "cam_2_front",
+            "cam_3_front_left",
+            "cam_4_front_right",
         ]
     
     def capture_images(self, folder_path):
@@ -68,7 +68,6 @@ class CameraManager:
         logging.info(f"Saved image {filename}")
 
     def run(self):
-        print("Running RUN!")
         print(self.warehouse.anomalies)
 
         self.capture_good_object()
@@ -82,6 +81,6 @@ class CameraManager:
 
 if __name__ == "__main__":
     warehouse = WarehouseBuilder()
-    warehouse.build("i_m_the_best", ["Wow_bad", "wow_terrible", "wow_very_bad", "wow_very_very_bad"])
+    warehouse.build("angle_index_test", ["angles_test"])
     camera_manager = CameraManager(warehouse)
     camera_manager.run()
