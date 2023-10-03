@@ -4,13 +4,10 @@ from typing import List
 
 class WarehouseBuilder:
     """
-    Class for building the data warehouse directory structure.
+    Class for building a structurized data warehouse for train|test images.
     """
 
     def __init__(self):
-        """
-        Initialize the WarehouseBuilder with empty lists for directories, subdirectories, and nested subdirectories.
-        """
         self.created_dirs = []
         self.created_sub_dirs = []
         self.created_nested_sub_dirs = []
@@ -31,7 +28,7 @@ class WarehouseBuilder:
             except Exception as e:
                 print(f"An error occurred while creating {path}: {e}")
 
-    def build(self, object_name, anomalies: List[str] = []):
+    def build(self, object_name, anomalies: List[str] = ["Default1","Default2","Default3"]):
         """
         Build the data warehouse directory structure based on the given object name and anomalies.
 
@@ -61,33 +58,14 @@ class WarehouseBuilder:
                 nested_sub_dir_path = os.path.join(sub_dir_path, nested_sub_dir)
                 self.create_directory(nested_sub_dir_path)
 
-        self.print_summary(object_name)
-
-    def print_summary(self, object_name: str):
-        """
-        Print a summary of the created directories, subdirectories, and nested subdirectories.
-
-        Parameters:
-            object_name (str): The name of the object directory.
-        """
+    def __str__(self):
+        ret = ""
         if self.created_dirs:
-            print(f"Created the following directories: {', '.join(self.created_dirs)}")
+            ret += f"Created the following directories: {', '.join(self.created_dirs)} in {self.object_name} \n"
         if self.created_sub_dirs:
-            print(
-                f"Created the following subdirectories for object {object_name}: {', '.join(self.created_sub_dirs)}"
-            )
+            ret += f"Created the following subdirectories for object {self.object_name}: {', '.join(self.created_sub_dirs)}"
         if self.created_nested_sub_dirs:
-            print(
-                f"With nested subdirectories: {', '.join(self.created_nested_sub_dirs)}"
-            )
-        elif not any(
-            [self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]
-        ):
-            print(
-                f"No folders created for object: {object_name}, because they already exist!"
-            )
-
-
-if __name__ == "__main__":
-    builder = WarehouseBuilder()
-    builder.build()
+            ret += f"With nested subdirectories: {', '.join(self.created_nested_sub_dirs)}"
+        elif not any([self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]):
+            ret +=f"Directory {self.object_name} already exist! Nothing has been created."  
+        return ret
