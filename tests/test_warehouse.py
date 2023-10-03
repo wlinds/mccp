@@ -2,6 +2,6 @@
 from multicamcomposepro.create_warehouse_directories import WarehouseBuilder
 
 if __name__ == "__main__":
-    builder = WarehouseBuilder()
-    builder.build("regn2", ["a","b"])
-    print(builder)
+    warehouse = WarehouseBuilder()
+    warehouse.build(object_name="purple_duck", anomalies=["Albinism", "Melanism", "Polydactyly", "Missing Limbs"])
+    print(warehouse)
