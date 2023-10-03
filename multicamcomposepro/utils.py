@@ -1,8 +1,26 @@
+import cv2
 import os
 from typing import List
 
 
-class WarehouseBuilder:
+
+
+# Camera #
+
+def camera_text_overlay(frame, camera_name):
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    position = (10, frame.shape[0] - 10)  # Bottom-left corner frame for each cam stream
+    font_scale = 0.5
+    font_color = (255, 255, 255)
+    line_type = 2
+    cv2.putText(frame, camera_name, position, font, font_scale, font_color, line_type)
+
+
+
+
+# File structures #
+
+class Warehouse:
     """
     Class for building a structurized data warehouse for train|test images.
     """
