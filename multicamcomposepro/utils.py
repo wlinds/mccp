@@ -160,3 +160,11 @@ class CameraIdentifier:
                     self.camera_mapping["skip"] = [i]
             else:
                 self.camera_mapping[identifier] = i
+
+    def camera_config(self):
+        # Check if camera_config.json exists
+        if not os.path.exists("camera_config.json"):
+            print("camera_config.json not found. Running CameraIdentifier...")
+            camera_identifier = CameraIdentifier()
+            camera_identifier.identify_all_cameras()
+            camera_identifier.save_to_json()

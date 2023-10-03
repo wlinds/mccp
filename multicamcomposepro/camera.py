@@ -1,6 +1,6 @@
 import cv2
 import os
-from create_warehouse_directories import WarehouseBuilder
+from utils import Warehouse
 import logging
 from platform import system
 import json
@@ -164,7 +164,7 @@ class CameraManager:
 
 
 if __name__ == "__main__":
-    warehouse = WarehouseBuilder()
+    warehouse = Warehouse()
     warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
-    camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=100)
+    camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()
