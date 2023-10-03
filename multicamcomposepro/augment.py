@@ -4,8 +4,6 @@ import random
 import os
 import logging
 
-logging.basicConfig(filename='./data_augmentation.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
 class DataAugmenter:
     def __init__(self, input_dir, output_dir, num_augmented_images=3, output_image_size=(1024, 1024), create_dir=True, temperature=1.0, logging_enabled=True):
         self.input_dir = input_dir
