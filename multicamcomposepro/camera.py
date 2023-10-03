@@ -13,9 +13,10 @@ os_name = system()
 
 
 class CameraManager:
-    def __init__(self, warehouse, num_pics=1):
+    def __init__(self, warehouse, test_anomaly_images=10, train_images: int = 0):
         self.warehouse = warehouse
-        self.num_pics = num_pics
+        self.test_anomaly_images = test_anomaly_images
+        self.train_images = train_images
         self.camera_angles = [
             "cam_0_left",
             "cam_1_right",
@@ -63,23 +64,38 @@ class CameraManager:
 
 
 
-    def capture_images(self, folder_path):
+    def capture_images(self, folder_path, num_pictures_to_take):
+        if num_pictures_to_take == 0:
+            logging.info("Skipping capture due to test_anomaly_images set to 0.")
+            return
+
         image_counter = 0
-        for _ in range(self.num_pics):
+        for _ in range(num_pictures_to_take):
             for cam_idx, angle in enumerate(self.camera_angles):
-                
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
 
+
     def capture_good_object(self):
         base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name)
-        for folder_type in ["test", "train"]:
-            input(
-                f"Press Enter to capture images for good object in {folder_type} folder:"
-            )
+        
+        if self.train_images != 0:
+            folder_type = "train"
+            input(f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:")
             good_folder = os.path.join(base_dir, folder_type, "good")
-            self.capture_images(good_folder)
+            self.capture_images(good_folder, self.train_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
+        
+        if self.test_anomaly_images != 0:
+            folder_type = "test"
+            input(f"Press Enter to capture images for good object in {folder_type} folder:")
+            good_folder = os.path.join(base_dir, folder_type, "good")
+            self.capture_images(good_folder, self.test_anomaly_images)
+            logging.info(f"Captured images for good object in {folder_type} folder.")
+        
+
+
+
 
     def capture_single_image(self, folder_path, cam_idx, angle, image_counter):
         if angle is None or angle == "skip":
@@ -115,12 +131,12 @@ class CameraManager:
         for anomaly in self.warehouse.anomalies:
             input(f"Press Enter to capture images for anomaly: {anomaly}")
             anomaly_folder = os.path.join(base_dir, "test", anomaly)
-            self.capture_images(anomaly_folder)
+            self.capture_images(anomaly_folder, self.test_anomaly_images)
             logging.info(f"Captured images for anomaly: {anomaly}")
 
 
 if __name__ == "__main__":
     warehouse = WarehouseBuilder()
-    warehouse.build("angle_index_test", ["angles_test"])
-    camera_manager = CameraManager(warehouse)
+    warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
+    camera_manager = CameraManager(warehouse, test_anomaly_images=1, train_images=3)
     camera_manager.run()
