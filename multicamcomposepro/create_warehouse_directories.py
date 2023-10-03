@@ -14,6 +14,7 @@ class WarehouseBuilder:
         self.created_dirs = []
         self.created_sub_dirs = []
         self.created_nested_sub_dirs = []
+        self.object_name = str()
         self.anomalies = [] # Used in camera.py
 
     def create_directory(self, path: str):
@@ -30,7 +31,7 @@ class WarehouseBuilder:
             except Exception as e:
                 print(f"An error occurred while creating {path}: {e}")
 
-    def build(self, object_name: str = "object", anomalies: List[str] = []):
+    def build(self, object_name, anomalies: List[str] = []):
         """
         Build the data warehouse directory structure based on the given object name and anomalies.
 
@@ -38,15 +39,17 @@ class WarehouseBuilder:
             object_name (str): The name of the object directory.
             anomalies (List[str]): A list of anomaly names for nested subdirectories.
         """
+        self.object_name = object_name
         base_dir_path = os.path.join(os.getcwd(), "data_warehouse")
         dataset_dir_path = os.path.join(base_dir_path, "dataset")
-        object_dir_path = os.path.join(dataset_dir_path, object_name)
+        object_dir_path = os.path.join(dataset_dir_path, self.object_name)
 
         for path in [base_dir_path, dataset_dir_path]:
             self.create_directory(path)
 
         self.create_directory(object_dir_path)
 
+        self.anomalies = anomalies # populates the anomalies list so that camera.py can use it
         sub_dirs = ["train", "test"]
         nested_sub_dirs = {"train": ["good"], "test": ["good"] + anomalies}
 
