@@ -6,10 +6,10 @@ from platform import system
 import json
 from camera_identifier import CameraIdentifier
 
+import time  # Import time for sleep
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
-
 
 
 class CameraManager:
@@ -32,9 +32,24 @@ class CameraManager:
         ]
         camera_identifier = CameraIdentifier()  # Create an instance
         self.num_cameras = camera_identifier.get_camera_count()
-
         self.load_camera_mapping()
         self.sort_camera_angles()
+
+        # Initialize cameras
+        self.captures = []
+        for cam_idx in range(self.num_cameras):
+            cap = (
+                cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
+                if os_name == "Windows"
+                else cv2.VideoCapture(cam_idx)
+            )
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
+            self.captures.append(cap)
+
+    def __del__(self):
+        for cap in self.captures:
+            cap.release()
 
     def load_camera_mapping(self, filename="camera_config.json"):
         if os.path.exists(filename):
@@ -42,27 +57,24 @@ class CameraManager:
                 data = json.load(f)
                 self.camera_mapping = data.get("Camera Order", {})
         else:
-            print("Camera mapping file not found.") # Change this to a logging statement and create the file if it doesn't exist
+            logging.warning(
+                "camera_config.json not found! Please run camera_identifier.py first."
+            )
 
     def sort_camera_angles(self):
-        if hasattr(self, 'camera_mapping'):
+        if hasattr(self, "camera_mapping"):
             sorted_angles = [None] * len(self.camera_angles)
             for identifier, index in self.camera_mapping.items():
-                if identifier == 'skip':
+                if identifier == "skip":
                     if isinstance(index, list):
                         for i in index:
-                            sorted_angles[i] = 'skip'
+                            sorted_angles[i] = "skip"
                     else:
-                        sorted_angles[index] = 'skip'
+                        sorted_angles[index] = "skip"
                 else:
                     sorted_angles[index] = self.camera_angles[int(identifier)]
             self.camera_angles = sorted_angles
             print("Sorted Camera Angles:", self.camera_angles)  # Debugging line
-
-
-
-
-
 
     def capture_images(self, folder_path, num_pictures_to_take):
         if num_pictures_to_take == 0:
@@ -75,43 +87,40 @@ class CameraManager:
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
 
-
     def capture_good_object(self):
-        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name)
-        
+        base_dir = os.path.join(
+            os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
+        )
+
         if self.train_images != 0:
             folder_type = "train"
-            input(f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:")
+            input(
+                f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
+            )
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_images(good_folder, self.train_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
-        
+
         if self.test_anomaly_images != 0:
             folder_type = "test"
-            input(f"Press Enter to capture images for good object in {folder_type} folder:")
+            input(
+                f"Press Enter to capture images for good object in {folder_type} folder:"
+            )
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_images(good_folder, self.test_anomaly_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
-        
-
-
-
 
     def capture_single_image(self, folder_path, cam_idx, angle, image_counter):
         if angle is None or angle == "skip":
-            logging.warning(f"Skipping camera {cam_idx} as angle is {angle}.")
+            # logging.warning(f"Skipping camera {cam_idx} as angle is {angle}.")
             return
+
         angle_folder_path = os.path.join(folder_path, angle)
         os.makedirs(angle_folder_path, exist_ok=True)
 
-        cap = (
-            cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
-            if os_name == "Windows"
-            else cv2.VideoCapture(cam_idx)
-        )
-
+        # Use the pre-initialized capture object
+        cap = self.captures[cam_idx]
         ret, frame = cap.read()
-        cap.release()
 
         if not ret:
             logging.error(
@@ -120,23 +129,42 @@ class CameraManager:
             return
 
         filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
-        cv2.imwrite(filename, frame)
-        logging.info(f"Saved image {filename}")
+
+        max_attempts = 2  # Maximum number of attempts to save the file
+        attempts = 0
+
+        while attempts < max_attempts:
+            cv2.imwrite(filename, frame)
+
+            if os.path.exists(filename):
+                logging.info(f"Saved image {filename}")
+                break
+            else:
+                logging.warning(f"Failed to save image {filename}. Retrying...")
+                attempts += 1
+
+        if attempts == max_attempts:
+            logging.error(
+                f"Failed to save image {filename} after {max_attempts} attempts."
+            )
 
     def run(self):
         print(self.warehouse.anomalies)
 
         self.capture_good_object()
-        base_dir = os.path.join(os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name)
-        for anomaly in self.warehouse.anomalies:
-            input(f"Press Enter to capture images for anomaly: {anomaly}")
-            anomaly_folder = os.path.join(base_dir, "test", anomaly)
-            self.capture_images(anomaly_folder, self.test_anomaly_images)
-            logging.info(f"Captured images for anomaly: {anomaly}")
+        base_dir = os.path.join(
+            os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
+        )
+        if self.test_anomaly_images != 0:
+            for anomaly in self.warehouse.anomalies:
+                input(f"Press Enter to capture images for anomaly: {anomaly}")
+                anomaly_folder = os.path.join(base_dir, "test", anomaly)
+                self.capture_images(anomaly_folder, self.test_anomaly_images)
+                logging.info(f"Captured images for anomaly: {anomaly}")
 
 
 if __name__ == "__main__":
     warehouse = WarehouseBuilder()
     warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
-    camera_manager = CameraManager(warehouse, test_anomaly_images=1, train_images=3)
+    camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=100)
     camera_manager.run()
