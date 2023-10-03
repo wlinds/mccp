@@ -7,7 +7,7 @@ import logging
 logging.basicConfig(filename='./data_augmentation.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class DataAugmenter:
-    def __init__(self, input_dir, output_dir, num_augmented_images=3, output_image_size=(1024, 1024), create_dir=True, logging_enabled=True):
+    def __init__(self, input_dir, output_dir, num_augmented_images=3, output_image_size=(1024, 1024), create_dir=True, temperature=1.0, logging_enabled=True):
         self.input_dir = input_dir
         self.output_dir = output_dir
         self.num_augmented_images = num_augmented_images
@@ -15,6 +15,7 @@ class DataAugmenter:
         self.create_dir = create_dir
 
         self.resolution = None # Pixel res for images passing through augmenter
+        self.temperature = temperature # Variable for augment intensity (Defaults to 1.0, 10 is deep fried)
 
         self.logging_enabled = logging_enabled
 
@@ -25,7 +26,8 @@ class DataAugmenter:
             self.logger = logging.basicConfig(filename='./data_augmentation.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
     # Augment from dir -> dir
-    def augment_images(self, selected_images=None):
+    def augment_images(self, selected_images=None, temperature=1.0):
+
         image_files = selected_images if selected_images else os.listdir(self.input_dir) # TODO might cause permission issues if called with selected_images
 
         for img_file in image_files:
@@ -97,8 +99,8 @@ class DataAugmenter:
 
     def random_crop(self, img):
         # TODO
-        x1 = random.randint(0, img.shape[1] - self.output_image_size[1]) + random.randint(-4,5)
-        y1 = random.randint(0, img.shape[0] - self.output_image_size[0]) + random.randint(-4,5)
+        x1 = random.randint(0, img.shape[1] - self.output_image_size[1]) + self.temperature * random.randint(-4,5)
+        y1 = random.randint(0, img.shape[0] - self.output_image_size[0]) + self.temperature * random.randint(-4,5)
         return img[y1:y1 + self.output_image_size[0], x1:x1 + self.output_image_size[1]], [x1,y1]
 
     def random_white_balance(self, img):
@@ -106,9 +108,9 @@ class DataAugmenter:
         # Split image into color channels, apply random scaling, return remerged img
         b, g, r = cv2.split(img)
 
-        scale_r = random.uniform(0.9, 1.1)
-        scale_g = random.uniform(0.9, 1.1)
-        scale_b = random.uniform(0.9, 1.1)
+        scale_r = random.uniform(0.9, 1.1 * self.temperature)
+        scale_g = random.uniform(0.9, 1.1 * self.temperature)
+        scale_b = random.uniform(0.9, 1.1 * self.temperature)
 
         factor = [scale_r, scale_g, scale_b]
 
@@ -136,6 +138,7 @@ class DataAugmenter:
 
     def random_rotation(self, img):
         angle = random.uniform(-3, 3)
+        angle = angle * self.temperature
         rotation_matrix = cv2.getRotationMatrix2D((img.shape[1] / 2, img.shape[0] / 2), angle, 1)
         return cv2.warpAffine(img, rotation_matrix, img.shape[1::-1], flags=cv2.INTER_LINEAR), angle
 
@@ -164,8 +167,8 @@ if __name__ == "__main__":
     input_dir = "/Users/helvetica/Desktop/train/good" # <- keep this plz
     output_dir = "/Users/helvetica/Desktop/train/aug"
 
-    # put ut input dir here
+    # put ur input dir here
 
-    augmenter = DataAugmenter(input_dir, output_dir)
+    augmenter = DataAugmenter(input_dir, output_dir, temperature=1)
 
     augmenter.augment_images()
