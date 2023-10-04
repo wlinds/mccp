@@ -112,6 +112,7 @@ class CameraIdentifier:
     def __init__(self):
         self.camera_mapping = {}
         self.os_name = system()
+        self.max_tested = 10 # Max USB connections / cameras
 
     def identify_camera(self, index, event):
         cap = (
@@ -132,8 +133,7 @@ class CameraIdentifier:
             json.dump({"Camera Order": self.camera_mapping}, f)
 
     def get_camera_count(self):
-        max_tested = 10  # Change this if you have more than 10 cameras
-        for i in range(max_tested):
+        for i in range(self.max_tested):
             cap = (
                 cv2.VideoCapture(i, cv2.CAP_DSHOW)
                 if self.os_name == "Windows"
