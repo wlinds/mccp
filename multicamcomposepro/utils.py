@@ -112,7 +112,7 @@ class CameraIdentifier:
     def __init__(self):
         self.camera_mapping = {}
         self.os_name = system()
-        self.max_tested = 10 # Max USB connections / cameras
+        self.max_tested = 10  # Max USB connections / cameras
 
     def identify_camera(self, index, event):
         cap = (
@@ -142,7 +142,7 @@ class CameraIdentifier:
             if not cap.isOpened():
                 cap.release()
                 return i
-        return max_tested
+        return self.max_tested
 
     def identify_all_cameras(self):
         number_cameras = self.get_camera_count()
