@@ -1,6 +1,3 @@
-import os
-from datetime import datetime
-
 from camera import CameraManager
 from utils import CameraConfigurator, CameraIdentifier, Warehouse
 

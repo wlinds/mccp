@@ -11,7 +11,7 @@ os_name = system()
 
 
 class CameraManager:
-    def __init__(self, warehouse, test_anomaly_images=50, train_images: int = 150):
+    def __init__(self, warehouse, test_anomaly_images: int = 5, train_images: int = 10):
         self.warehouse = warehouse
         self.test_anomaly_images = test_anomaly_images
         self.train_images = train_images
