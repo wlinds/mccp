@@ -1,10 +1,10 @@
-import cv2
-import os
-from utils import Warehouse
-import logging
-from platform import system
 import json
+import logging
+import os
+from platform import system
 
+import cv2
+from utils import Warehouse
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -102,7 +102,6 @@ class CameraManager:
 
             image_counter += 1
             input("Press Enter to continue capturing after adjusting the object...")
-
 
     def capture_good_object(self):
         base_dir = os.path.join(

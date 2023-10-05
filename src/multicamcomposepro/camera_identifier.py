@@ -1,8 +1,10 @@
-import cv2
 import json
-from platform import system
 import os
 import threading
+from platform import system
+
+import cv2
+
 
 class CameraIdentifier:
     def __init__(self):
@@ -49,13 +51,14 @@ class CameraIdentifier:
             identifier = input(f"Enter a unique identifier for camera at index {i}: ")
             event.set()
             thread.join()
-            if identifier.lower() == 'skip':
-                if 'skip' in self.camera_mapping:
-                    self.camera_mapping['skip'].append(i)
+            if identifier.lower() == "skip":
+                if "skip" in self.camera_mapping:
+                    self.camera_mapping["skip"].append(i)
                 else:
-                    self.camera_mapping['skip'] = [i]
+                    self.camera_mapping["skip"] = [i]
             else:
                 self.camera_mapping[identifier] = i
+
 
 if __name__ == "__main__":
     camera_identifier = CameraIdentifier()

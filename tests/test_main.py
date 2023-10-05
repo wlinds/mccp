@@ -1,5 +1,6 @@
 # To manually test, run from root with python3 -m tests.test_main
-from multicamcomposepro.main import initialize_cameras
+from src.multicamcomposepro.main import initialize_cameras
+
 
 def main():
     print(f"{__name__} test running...")
@@ -9,6 +10,7 @@ def main():
 
     else:
         print("Test failed. No cameras found.")
+
 
 if __name__ == "__main__":
     main()

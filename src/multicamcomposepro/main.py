@@ -1,7 +1,8 @@
-from datetime import datetime
-from camera import CameraManager
-from utils import CameraIdentifier, Warehouse, CameraConfigurator
 import os
+from datetime import datetime
+
+from camera import CameraManager
+from utils import CameraConfigurator, CameraIdentifier, Warehouse
 
 # TODO Summarized:
 # Make modular grid of camera streams (i.e. not only a row, but columns as well)

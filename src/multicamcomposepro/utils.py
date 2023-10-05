@@ -1,10 +1,10 @@
-import cv2
-import os
-from typing import List
 import json
-from platform import system
+import os
 import threading
+from platform import system
+from typing import List
 
+import cv2
 
 # Camera Text Overlay #
 
