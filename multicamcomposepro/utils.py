@@ -6,6 +6,7 @@ from platform import system
 import threading
 
 
+
 # Camera Text Overlay #
 
 
@@ -24,7 +25,7 @@ def camera_text_overlay(frame, camera_name):
 #   Camera Identifier #
 
 
-class CameraIdentifier:
+class CameraIdentifier():
     """
     Opens Cameras one by one and asks the user to identify them.
     Saves camera order with unique identifiers to camera_config.json.
@@ -49,6 +50,7 @@ class CameraIdentifier:
                 break
         cap.release()
         cv2.destroyAllWindows()
+
 
     def save_to_json(self, filename="camera_config.json"):
         with open(filename, "w") as f:
@@ -92,16 +94,13 @@ class CameraIdentifier:
             camera_identifier.save_to_json()
 
 
-# Camera Configurator
+# Camera Configurator #
 
-import cv2
-
-
-class WebcamUtility:
+class CameraConfigurator():
     """
-    Utility class for configuring camera exposure and color temperature.
+    Utility Class for configuring camera exposure and color temperature.
     Sets exposure and color temperature to 0 and 3000 respectively by default.
-    If another value is chosen it will be saved to all connected cameras.
+    If another value is chosen during the setup it will be saved to all connected cameras.
     """
 
     def __init__(self, device_id=0):
@@ -158,6 +157,13 @@ class WebcamUtility:
             self.color_temp -= 50
             self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
 
+
+    def save_to_json(self, filename="camera_settings.json"):
+
+        with open(filename, "w") as f:
+            json.dump({"CameraSettings": {"Camera Exposure": self.exposure, "Camera Color Temperature": self.color_temp}}, f)
+
+
     def run(self):
         while self.captureDevice.isOpened():
             ret, frame = self.captureDevice.read()
@@ -174,11 +180,13 @@ class WebcamUtility:
         self.captureDevice.release()
         cv2.destroyAllWindows()
 
-
-if __name__ == "__main__":
-    webcam_util = WebcamUtility()
-    webcam_util.run()
-
+    def camera_configurator(self):
+        # Check if camera_settings.json exists
+        if not os.path.exists("camera_settings.json"):
+            print("camera_settings.json not found. Running CameraConfigurator...")
+            camera_configurator = CameraConfigurator()
+            camera_configurator.run()
+            camera_configurator.save_to_json()
 
 # File structures #
 
@@ -265,3 +273,6 @@ class Warehouse:
                 f"Directory {self.object_name} already exist! Nothing has been created."
             )
         return ret
+
+
+

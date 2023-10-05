@@ -1,6 +1,6 @@
 from datetime import datetime
 from camera import CameraManager
-from utils import CameraIdentifier, camera_text_overlay, Warehouse
+from utils import CameraIdentifier, Warehouse, CameraConfigurator
 import os
 
 # TODO Summarized:
@@ -10,6 +10,9 @@ import os
 def main():
     camera_identifier = CameraIdentifier()
     camera_identifier.camera_config()  # Check if camera_config.json exists
+
+    camera_configurator = CameraConfigurator()
+    camera_configurator.camera_configurator()
 
     warehouse = Warehouse()
     warehouse.build(

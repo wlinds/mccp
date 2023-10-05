@@ -1,12 +1,11 @@
 import cv2
 import os
-from utils import Warehouse
+from utils import Warehouse, CameraIdentifier, CameraConfigurator
 import logging
 from platform import system
 import json
-from camera_identifier import CameraIdentifier
 
-import time  # Import time for sleep
+
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -45,6 +44,7 @@ class CameraManager:
             )
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
+            cap.set(cv2.CAP_PROP_EXPOSURE, 0)
             self.captures.append(cap)
 
     def __del__(self):
