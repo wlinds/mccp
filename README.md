@@ -1,11 +1,73 @@
-# mccp
-MultiCamComposePro - Manage multiple cameras using Python
 
+# MultiCamComposePro - Manage multiple cameras using Python
+## MCCP
 
-# Issue 1:
+## Overview
 
-Serial numbers are optional on USB devices. Some models will have them, some won't. If the device has one, then your OS will recognize the device no matter which USB port you plug it into. But if it doesn’t have a serial number, your OS treats each appearance on a different USB port as if it were a new device.
+- This project aims to capture images of objects from multiple camera angles and detect anomalies. It uses OpenCV for image capturing and provides a modular approach to manage camera configurations and image storage.
+Requirements
 
-If the cameras connected don't have unique ID:s, such as serial number, **config is necessary**.
+    - Python 3.10
+    - OpenCV
+    - JSON for configuration
 
-It is very important that the same cameras corresponds to the same sides of the target object.
+## Installation
+
+1. Clone the repository:
+
+```bash
+
+git clone https://github.com/your_username/your_project_name.git
+```
+2. Navigate to the project directory:
+```bash
+
+cd your_project_name
+```
+3. Install the required packages:
+
+```bash
+
+    pip install -r requirements.txt
+```
+## Usage
+
+    Run the main.py script to start the application:
+
+```bash
+
+    python main.py
+```
+## Modules
+### camera.py
+
+    Class: CameraManager
+        Manages multiple cameras and captures images.
+        Loads camera configurations from a JSON file.
+        Sorts camera angles based on the configuration.
+
+### main.py
+
+    Function: main()
+        Orchestrates the camera identification, configuration, and image capturing process.
+
+utils.py
+
+    Class: Warehouse
+        Manages object names and their anomalies.
+    Class: CameraIdentifier
+        Identifies and configures cameras.
+    Class: CameraConfigurator
+        Additional camera setup.
+
+Configuration
+
+    camera_config.json: Holds the camera settings and order.
+
+TODO
+
+    Make a modular grid of camera streams, i.e., not only a row but columns as well.
+
+License
+
+This project is licensed under the MIT License - see the LICENSE.md file for details.
