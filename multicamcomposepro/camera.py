@@ -1,10 +1,9 @@
 import cv2
 import os
-from utils import Warehouse, CameraIdentifier, CameraConfigurator
+from utils import Warehouse
 import logging
 from platform import system
 import json
-
 
 
 logging.basicConfig(level=logging.INFO)
@@ -16,6 +15,8 @@ class CameraManager:
         self.warehouse = warehouse
         self.test_anomaly_images = test_anomaly_images
         self.train_images = train_images
+        self.load_camera_config()
+        self.load_camera_mapping()
         self.camera_angles = [
             "cam_0_left",
             "cam_1_right",
@@ -29,9 +30,6 @@ class CameraManager:
             "cam_9_top_left",
             "cam_10_top_right",
         ]
-        camera_identifier = CameraIdentifier()  # Create an instance
-        self.num_cameras = camera_identifier.get_camera_count()
-        self.load_camera_mapping()
         self.sort_camera_angles()
 
         # Initialize cameras
@@ -44,12 +42,26 @@ class CameraManager:
             )
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
-            cap.set(cv2.CAP_PROP_EXPOSURE, 0)
+            cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+            cap.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
+            cap.set(cv2.CAP_PROP_ZOOM, self.zoom)
             self.captures.append(cap)
 
     def __del__(self):
         for cap in self.captures:
             cap.release()
+
+    def load_camera_config(self, filename="camera_config.json"):
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+                camera_settings = data.get("CameraSettings", {})
+                self.exposure = camera_settings.get("Camera Exposure", 0)
+                self.color_temp = camera_settings.get("Camera Color Temperature", 0)
+                self.zoom = camera_settings.get("Camera Zoom", 0)
+                self.num_cameras = len(data.get("Camera Order", {}))
+        else:
+            logging.warning(f"{filename} not found! Using default camera settings.")
 
     def load_camera_mapping(self, filename="camera_config.json"):
         if os.path.exists(filename):

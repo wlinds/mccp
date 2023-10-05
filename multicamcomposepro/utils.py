@@ -6,7 +6,6 @@ from platform import system
 import threading
 
 
-
 # Camera Text Overlay #
 
 
@@ -25,7 +24,7 @@ def camera_text_overlay(frame, camera_name):
 #   Camera Identifier #
 
 
-class CameraIdentifier():
+class CameraIdentifier:
     """
     Opens Cameras one by one and asks the user to identify them.
     Saves camera order with unique identifiers to camera_config.json.
@@ -51,10 +50,20 @@ class CameraIdentifier():
         cap.release()
         cv2.destroyAllWindows()
 
-
     def save_to_json(self, filename="camera_config.json"):
+        # Read existing data
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+        else:
+            data = {}
+
+        # Update with new data
+        data["Camera Order"] = self.camera_mapping
+
+        # Write back to file
         with open(filename, "w") as f:
-            json.dump({"Camera Order": self.camera_mapping}, f)
+            json.dump(data, f)
 
     def get_camera_count(self):
         for i in range(self.max_tested):
@@ -96,7 +105,8 @@ class CameraIdentifier():
 
 # Camera Configurator #
 
-class CameraConfigurator():
+
+class CameraConfigurator:
     """
     Utility Class for configuring camera exposure and color temperature.
     Sets exposure and color temperature to 0 and 3000 respectively by default.
@@ -157,12 +167,23 @@ class CameraConfigurator():
             self.color_temp -= 50
             self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
 
+    def save_to_json(self, filename="camera_config.json"):
+        # Read existing data
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+        else:
+            data = {}
 
-    def save_to_json(self, filename="camera_settings.json"):
+        # Update with new data
+        data["CameraSettings"] = {
+            "Camera Exposure": self.exposure,
+            "Camera Color Temperature": self.color_temp,
+        }
 
+        # Write back to file
         with open(filename, "w") as f:
-            json.dump({"CameraSettings": {"Camera Exposure": self.exposure, "Camera Color Temperature": self.color_temp}}, f)
-
+            json.dump(data, f)
 
     def run(self):
         while self.captureDevice.isOpened():
@@ -187,6 +208,9 @@ class CameraConfigurator():
             camera_configurator = CameraConfigurator()
             camera_configurator.run()
             camera_configurator.save_to_json()
+
+
+#
 
 # File structures #
 
@@ -273,6 +297,3 @@ class Warehouse:
                 f"Directory {self.object_name} already exist! Nothing has been created."
             )
         return ret
-
-
-
