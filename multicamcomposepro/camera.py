@@ -11,7 +11,7 @@ os_name = system()
 
 
 class CameraManager:
-    def __init__(self, warehouse, test_anomaly_images=10, train_images: int = 0):
+    def __init__(self, warehouse, test_anomaly_images=50, train_images: int = 150):
         self.warehouse = warehouse
         self.test_anomaly_images = test_anomaly_images
         self.train_images = train_images
@@ -97,7 +97,12 @@ class CameraManager:
         for _ in range(num_pictures_to_take):
             for cam_idx, angle in enumerate(self.camera_angles):
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
+
+            # Pause here to allow for object adjustment
+
             image_counter += 1
+            input("Press Enter to continue capturing after adjusting the object...")
+
 
     def capture_good_object(self):
         base_dir = os.path.join(

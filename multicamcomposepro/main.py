@@ -1,5 +1,7 @@
+from datetime import datetime
 from camera import CameraManager
 from utils import CameraIdentifier, Warehouse, CameraConfigurator
+import os
 
 # TODO Summarized:
 # Make modular grid of camera streams (i.e. not only a row, but columns as well)
@@ -10,7 +12,7 @@ def main():
     camera_identifier.camera_config()  # Check if camera_config.json exists
 
     camera_configurator = CameraConfigurator()
-    camera_configurator.camera_configurator()
+    camera_configurator.run()
 
     warehouse = Warehouse()
     warehouse.build(
