@@ -10,12 +10,12 @@ def main():
     camera_identifier.camera_config()  # Check if camera_config.json exists
 
     camera_configurator = CameraConfigurator()
-    camera_configurator.run()
+    camera_configurator.camera_configurator()
 
     warehouse = Warehouse()
     warehouse.build(
-        object_name="purple_duck",
-        anomalies=["Albinism", "Melanism", "Polydactyly", "Missing Limbs"],
+        object_name="object",
+        anomalies=["anomaly"],
     )
     print(warehouse)
     camera_manager = CameraManager(warehouse)

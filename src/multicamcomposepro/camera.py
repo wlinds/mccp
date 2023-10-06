@@ -33,8 +33,10 @@ class CameraManager:
         self.sort_camera_angles()
 
         # Initialize cameras
+    def initialize_cameras(self):
         self.captures = []
         for cam_idx in range(self.num_cameras):
+            print("image capture", cam_idx)
             cap = (
                 cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
                 if os_name == "Windows"
@@ -97,10 +99,10 @@ class CameraManager:
         for _ in range(num_pictures_to_take):
             # Pause here to allow for object adjustment
             input("Press Enter to continue capturing after adjusting the object...")
-
             for cam_idx, angle in enumerate(self.camera_angles):
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
+
 
     def capture_good_object(self):
         base_dir = os.path.join(
@@ -127,7 +129,6 @@ class CameraManager:
 
     def capture_single_image(self, folder_path, cam_idx, angle, image_counter):
         if angle is None or angle == "skip":
-            # logging.warning(f"Skipping camera {cam_idx} as angle is {angle}.")
             return
 
         angle_folder_path = os.path.join(folder_path, angle)
@@ -135,8 +136,18 @@ class CameraManager:
 
         # Use the pre-initialized capture object
         cap = self.captures[cam_idx]
-        ret, frame = cap.read()
 
+        # Flush the buffer
+        for _ in range(2):
+            ret, _ = cap.read()
+            if not ret:
+                logging.error(
+                    f"Could not read frame from camera {cam_idx} at angle {angle}."
+                )
+                return
+
+        # Capture the actual frame
+        ret, frame = cap.read()
         if not ret:
             logging.error(
                 f"Could not read frame from camera {cam_idx} at angle {angle}."
@@ -144,28 +155,14 @@ class CameraManager:
             return
 
         filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
+        cv2.imwrite(filename, frame)
+        logging.info(f"Saved image {filename}")
 
-        max_attempts = 2  # Maximum number of attempts to save the file
-        attempts = 0
-
-        while attempts < max_attempts:
-            cv2.imwrite(filename, frame)
-
-            if os.path.exists(filename):
-                logging.info(f"Saved image {filename}")
-                break
-            else:
-                logging.warning(f"Failed to save image {filename}. Retrying...")
-                attempts += 1
-
-        if attempts == max_attempts:
-            logging.error(
-                f"Failed to save image {filename} after {max_attempts} attempts."
-            )
 
     def run(self):
         print(self.warehouse.anomalies)
 
+        self.initialize_cameras()
         self.capture_good_object()
         base_dir = os.path.join(
             os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
