@@ -95,16 +95,12 @@ class CameraManager:
 
         image_counter = 0
         for _ in range(num_pictures_to_take):
-
+            # Pause here to allow for object adjustment
+            input("Press Enter to continue capturing after adjusting the object...")
 
             for cam_idx, angle in enumerate(self.camera_angles):
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
-
-
             image_counter += 1
-
-            # Pause here to allow for object adjustment
-            input("Press Enter to continue capturing after adjusting the object...")
 
     def capture_good_object(self):
         base_dir = os.path.join(
