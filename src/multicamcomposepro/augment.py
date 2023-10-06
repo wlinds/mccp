@@ -1,10 +1,8 @@
 import logging
 import os
 import random
-
 import cv2
 import numpy as np
-
 
 class DataAugmenter:
     def __init__(
@@ -12,7 +10,7 @@ class DataAugmenter:
         input_dir,
         output_dir,
         num_augmented_images=3,
-        output_image_size=(1024, 1024),
+        output_image_size=(640, 480),
         create_dir=True,
         temperature=1.0,
         logging_enabled=True,
@@ -22,27 +20,66 @@ class DataAugmenter:
         self.num_augmented_images = num_augmented_images
         self.output_image_size = output_image_size
         self.create_dir = create_dir
-
-        self.resolution = None  # Pixel res for images passing through augmenter
-        self.temperature = temperature  # Variable for augment intensity (Defaults to 1.0, 10 is deep fried)
-
+        self.temperature = temperature
+        self.resolution = None
         self.logging_enabled = logging_enabled
 
         if create_dir and not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
         if logging_enabled:
-            self.logger = logging.basicConfig(
+            logging.basicConfig(
                 filename="./data_augmentation.log",
                 level=logging.DEBUG,
                 format="%(asctime)s - %(levelname)s - %(message)s",
             )
 
-    # Augment from dir -> dir
-    def augment_images(self, selected_images=None, temperature=1.0):
-        image_files = (
-            selected_images if selected_images else os.listdir(self.input_dir)
-        )  # TODO might cause permission issues if called with selected_images
+    def process_image(self, img, filename):
+        if img is None:
+            logging.error(f"Image is None for {filename}")
+            return
+
+        for i in range(self.num_augmented_images):
+            logging.info(f"Augmenting {filename}. Iteration: {i}")
+
+            img, val = self.random_white_balance(img)
+            logging.info(f"Iter. {i}: {filename} - RGB vals: {val}")
+
+            img, val = self.random_exposure(img)
+            logging.info(f"Iter. {i}: {filename} - Exposure: {val}")
+
+            img, val = self.random_rotation(img)
+            logging.info(f"Iter. {i}: {filename} - Rotation: {val}")
+
+            img, val = self.random_mirror(img)
+            logging.info(f"Iter. {i}: {filename} - Mirrored: {val}")
+
+            img, val = self.random_lens_distortion(img, filename)
+            logging.info(f"Iter. {i}: {filename} - Perspect: {val}")
+
+            img, val = self.random_gaussian_blur(img)
+            logging.info(f"Iter. {i}: {filename} - Blur rad: {val}")
+
+            # img, val = self.random_texture_overlay(img)
+
+            # img, val = self.random_crop(img)
+            # logging.info(f"Iter. {i}: {filename} - Crop factor: {val}")
+
+            if img is None:
+                logging.error(f"Image is None after augmentation for {filename}")
+                return
+
+            output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
+            output_path = os.path.join(self.output_dir, output_file)
+            cv2.imwrite(output_path, img)
+
+            if self.logging_enabled:
+                logging.info(f"Finished augmentation of {filename} as {output_file}")
+                print(f"Finished augmentation of {filename} as {output_file}")
+
+
+    def augment_images(self, selected_images=None):
+        image_files = selected_images if selected_images else os.listdir(self.input_dir)
 
         for img_file in image_files:
             logging.info(f"Processing {img_file}")
@@ -52,81 +89,23 @@ class DataAugmenter:
             if self.resolution is None:
                 self.resolution = img.shape[:2]
 
-            for i in range(self.num_augmented_images):
-                if self.logging_enabled:
-                    logging.info(f"Augmenting {img_file}. Iteration: {i}")
-
-                # Simulate white balance and exposure (RGB channel manipulation)
-                white_balanced_img, wb_factor = self.random_white_balance(img)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - WB values: {wb_factor}")
-
-                exposed_img, exposed_factor = self.random_exposure(white_balanced_img)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - Exposure {exposed_factor}")
-
-                # Simulate orientation (rotation_matrix)
-                rotated_img, rot_angle = self.random_rotation(exposed_img)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - {rot_angle=}")
-
-                # Simulate mirror
-                mirrored_img, mirrored = self.random_mirror(rotated_img)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - {mirrored=}")
-
-                # Simulate focal length / warp perspective + focus (gaussian blur)
-                distorted_img = self.random_lens_distortion(mirrored_img, img_file)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - No adjustments made.")
-
-                blurred_img, blur_radius = self.random_gaussian_blur(distorted_img)
-                if self.logging_enabled:
-                    logging.info(f"Iter. {i}: {img_file} - {blur_radius=}")
-
-                # Simulate scratches (texture overlay) # TODO
-                texture_overlayed_img = self.random_texture_overlay(blurred_img)
-
-                # Perform random crop
-                cropped_img, crop_factor = self.random_crop(texture_overlayed_img)
-                if self.logging_enabled:
-                    logging.info(f"Iter {i}: {img_file}_{i} - {crop_factor=}.")
-
-                output_file = os.path.splitext(img_file)[0] + f"_aug_{i}.png"
-
-                output_path = os.path.join(self.output_dir, output_file)
-                cv2.imwrite(output_path, texture_overlayed_img)
-
-                if self.logging_enabled:
-                    logging.info(
-                        f"Finished augmentation of {img_file} as {output_file}"
-                    )
-                    print((f"Finished augmentation of {img_file} as {output_file}"))
+            self.process_image(img, img_file)
 
         print("Data augmentation complete.")
 
     def random_crop(self, img):
         # TODO
-        x1 = random.randint(
-            0, img.shape[1] - self.output_image_size[1]
-        ) + self.temperature * random.randint(-4, 5)
-        y1 = random.randint(
-            0, img.shape[0] - self.output_image_size[0]
-        ) + self.temperature * random.randint(-4, 5)
-        return img[
-            y1 : y1 + self.output_image_size[0], x1 : x1 + self.output_image_size[1]
-        ], [x1, y1]
+        return img
 
     def random_white_balance(self, img):
-        # Simulate white balance adjustment (rgb) TODO: Set actual kelvin values (?)
-        # Split image into color channels, apply random scaling, return remerged img
+        # TODO: Set actual kelvin values (?)
         b, g, r = cv2.split(img)
 
-        scale_r = random.uniform(0.9, 1.1 * self.temperature)
-        scale_g = random.uniform(0.9, 1.1 * self.temperature)
-        scale_b = random.uniform(0.9, 1.1 * self.temperature)
+        factor = self.temperature * 0.02
 
-        factor = [scale_r, scale_g, scale_b]
+        scale_r = random.uniform(0.98 + factor, 1.02)
+        scale_g = random.uniform(0.98 - factor, 1.02)
+        scale_b = random.uniform(0.98 - factor, 1.02)
 
         balanced_r = cv2.convertScaleAbs(r, alpha=scale_r)
         balanced_g = cv2.convertScaleAbs(g, alpha=scale_g)
@@ -134,25 +113,26 @@ class DataAugmenter:
 
         img = cv2.merge((balanced_b, balanced_g, balanced_r))
 
-        return img, factor
+        factor_str = f"R: {scale_r:.3f}, G: {scale_g:.3f}, B: {scale_b:.3f}"
+
+        return img, factor_str
+
+
 
     def random_exposure(self, img):
-        # Either under over overexposes image
+        # Higher temperature values overexposes, lower temperature values underexposes
         exposure_factor = 1.0
 
-        while 0.95 <= exposure_factor <= 1.05:
-            exposure_factor = np.random.uniform(0.7, 1.2)
+        while 1 - (abs(self.temperature * 0.01)) <= exposure_factor <= 1 + (abs(self.temperature * 0.04)):
+            exposure_factor = np.random.uniform(1.0 - (abs(self.temperature * 0.1)), 1.0) + (self.temperature * 0.1)
 
         img = img * exposure_factor
-
-        # Clip pixel values to ensure they are within the valid range [0, 255] # TODO check if this might cause issues
-        img = np.clip(img, 0, 255).astype(np.uint8)
 
         return img, exposure_factor
 
     def random_rotation(self, img):
-        angle = random.uniform(-3, 3)
-        angle = angle * self.temperature
+        angle = random.uniform(-abs(self.temperature) + 1, abs(self.temperature) - 1)
+        angle = angle + (abs(self.temperature) % 3)
         rotation_matrix = cv2.getRotationMatrix2D(
             (img.shape[1] / 2, img.shape[0] / 2), angle, 1
         )
@@ -164,11 +144,23 @@ class DataAugmenter:
         )
 
     def random_lens_distortion(self, img, file_name):
-        # Generate random lens distortion parameters
+        min_distortion_factor = 0.99 - (abs(self.temperature)) * 0.02
+        max_distortion_factor = 1.01 + (abs(self.temperature)) * 0.02
 
-        # TODO
+        distortion_factor_x = np.random.uniform(min_distortion_factor, max_distortion_factor)
+        distortion_factor_y = np.random.uniform(min_distortion_factor, max_distortion_factor)
 
-        return img
+        height, width = img.shape[:2]
+
+        # perspective transformation matrix
+        distortion_matrix = np.array([
+            [distortion_factor_x, 0, 0],
+            [0, distortion_factor_y, 0],
+        ], dtype=np.float32)
+
+        distorted_img = cv2.warpAffine(img, distortion_matrix, (width, height))
+
+        return distorted_img, distortion_matrix
 
     def random_mirror(self, img):
         if np.random.rand() < 0.5:
@@ -176,8 +168,8 @@ class DataAugmenter:
         return img, False
 
     def random_gaussian_blur(self, img):
-        blur_radius = random.uniform(0, 2.0)
-        return cv2.GaussianBlur(img, (0, 0), blur_radius), blur_radius
+        blur_radius = random.uniform(0, 1.0)
+        return cv2.GaussianBlur(img, (0, 0), blur_radius), f"{blur_radius:.5f}"
 
     def random_texture_overlay(self, img):
         # TODO
@@ -185,11 +177,9 @@ class DataAugmenter:
 
 
 if __name__ == "__main__":
-    input_dir = "/Users/helvetica/Desktop/train/good"  # <- keep this plz
-    output_dir = "/Users/helvetica/Desktop/train/aug"
+    input_dir = "/Users/helvetica/_anodet/data/purple_duck/train/good/test_0"
+    output_dir = "/Users/helvetica/_anodet/data/purple_duck/train/good/aug"
 
-    # put ur input dir here
-
-    augmenter = DataAugmenter(input_dir, output_dir, temperature=1)
+    augmenter = DataAugmenter(input_dir, output_dir, temperature=1.1)
 
     augmenter.augment_images()
