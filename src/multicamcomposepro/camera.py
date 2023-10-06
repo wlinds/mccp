@@ -166,12 +166,16 @@ class CameraManager:
         base_dir = os.path.join(
             os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
         )
-        if self.test_anomaly_images != 0:
-            for anomaly in self.warehouse.anomalies:
-                input(f"Press Enter to capture images for anomaly: {anomaly}")
-                anomaly_folder = os.path.join(base_dir, "test", anomaly)
-                self.capture_images(anomaly_folder, self.test_anomaly_images)
-                logging.info(f"Captured images for anomaly: {anomaly}")
+        for anomaly in self.warehouse.anomalies:
+            input(f"Press Enter to capture images for anomaly: {anomaly}")
+            cleaned_anomaly = self.warehouse.clean_folder_name(
+                anomaly
+            )  # Clean the anomaly name
+            anomaly_folder = os.path.join(
+                base_dir, "test", cleaned_anomaly
+            )  # Use the cleaned name
+            self.capture_images(anomaly_folder, self.test_anomaly_images)
+            logging.info(f"Captured images for anomaly: {anomaly}")
 
 
 if __name__ == "__main__":

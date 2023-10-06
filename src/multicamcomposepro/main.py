@@ -14,11 +14,11 @@ def main():
 
     warehouse = Warehouse()
     warehouse.build(
-        object_name="object",
-        anomalies=["anomaly"],
+        object_name="o b j e ct",
+        anomalies=["a n o m a ly"],
     )
     print(warehouse)
-    camera_manager = CameraManager(warehouse)
+    camera_manager = CameraManager(warehouse, 2, 3)
     camera_manager.run()
 
 
