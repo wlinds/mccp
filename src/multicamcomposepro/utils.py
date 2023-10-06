@@ -102,11 +102,13 @@ class CameraIdentifier:
             camera_identifier.identify_all_cameras()
             camera_identifier.save_to_json()
         else:
-        # Check if 'Camera Order' exists in the JSON file
-            with open('camera_config.json', 'r') as f:
+            # Check if 'Camera Order' exists in the JSON file
+            with open("camera_config.json", "r") as f:
                 data = json.load(f)
-                if 'Camera Order' not in data:
-                    print('"Camera Order" not found in camera_config.json. Running CameraIdentifier...')
+                if "Camera Order" not in data:
+                    print(
+                        '"Camera Order" not found in camera_config.json. Running CameraIdentifier...'
+                    )
                     camera_identifier = CameraIdentifier()
                     camera_identifier.identify_all_cameras()
                     camera_identifier.save_to_json()
@@ -212,20 +214,26 @@ class CameraConfigurator:
 
     def camera_configurator(self):
         # Check if camera_settings.json exists
-        if not os.path.exists("camera_settings.json"):
+        if not os.path.exists("camera_config.json"):
             print("camera_settings.json not found. Running CameraConfigurator...")
             camera_configurator = CameraConfigurator()
             camera_configurator.run()
             camera_configurator.save_to_json()
         else:
-        # Check if 'Camera Exposure' or 'Camera Color Temperature' exists in the JSON file
-            with open('camera_config.json', 'r') as f:
+            # Check if 'Camera Exposure' or 'Camera Color Temperature' exists in the JSON file
+            with open("camera_config.json", "r") as f:
                 data = json.load(f)
-                if 'Camera Exposure' or 'Camera Color Temperature' not in data:
-                    print('"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...')
-                    camera_identifier = CameraIdentifier()
-                    camera_identifier.identify_all_cameras()
-                    camera_identifier.save_to_json()
+                camera_settings = data.get("CameraSettings", {})
+                if (
+                    "Camera Exposure" not in camera_settings
+                    or "Camera Color Temperature" not in camera_settings
+                ):
+                    print(
+                        '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
+                    )
+                    camera_configurator = CameraConfigurator()
+                    camera_configurator.run()
+                    camera_configurator.save_to_json()
 
 
 #

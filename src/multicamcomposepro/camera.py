@@ -33,6 +33,7 @@ class CameraManager:
         self.sort_camera_angles()
 
         # Initialize cameras
+
     def initialize_cameras(self):
         self.captures = []
         for cam_idx in range(self.num_cameras):
@@ -103,7 +104,6 @@ class CameraManager:
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
 
-
     def capture_good_object(self):
         base_dir = os.path.join(
             os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
@@ -157,7 +157,6 @@ class CameraManager:
         filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
         cv2.imwrite(filename, frame)
         logging.info(f"Saved image {filename}")
-
 
     def run(self):
         print(self.warehouse.anomalies)
