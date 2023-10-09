@@ -1,18 +1,26 @@
 [project]
-name = "multi_cam_compose_pro_RUFSHOD"
-version = "0.0.1"
-authors = [
-  { name="Wlinds & Rufshod", email="alexander@11a.se" },
-]
-description = "PLACEHOLDER: multi_cam_compose_pro is used to take images in order to train a model"
+name = "multicamcomposepro"
+version = "0.1.0"
+authors = [{ name = "Wlinds & Rufshod", email = "alexander@11a.se" }]
+description = "multi_cam_compose_pro is used to take images in order to train a model"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.6"
 classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+
+
 ]
-dynamic = ["dependencies"]
+dependencies = ["opencv-python", "numpy", "pytest >= 3"]
+
 [project.urls]
 "Homepage" = "https://github.com/wlinds/mccp"
 "Bug Tracker" = "https://github.com/wlinds/mccp/issues"
+
+[build-system]
+requires = ["setuptools >= 61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = "src"
