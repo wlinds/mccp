@@ -1,8 +1,8 @@
 from setuptools import setup
 
 setup(
-    name="multicamviewerpro",
+    name="multicamcomposepro",
     version="0.1.0",
-    packages=["multicamviewer"],
+    packages=["src/multicamcomposepro"],
     install_requires=["opencv-python"],
 )
