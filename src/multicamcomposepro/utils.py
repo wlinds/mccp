@@ -1,11 +1,11 @@
 import json
 import os
-from threading import Event, Thread
 from platform import system
-from typing import List, Union, Optional
-import numpy as np
+from threading import Event, Thread
+from typing import List, Optional, Union
 
 import cv2
+import numpy as np
 
 # Camera Text Overlay #
 
@@ -174,7 +174,9 @@ class CameraConfigurator:
     """
 
     def __init__(self, device_id: int = 0) -> None:
-        self.captureDevice: cv2.VideoCapture = cv2.VideoCapture(device_id, cv2.CAP_DSHOW)
+        self.captureDevice: cv2.VideoCapture = cv2.VideoCapture(
+            device_id, cv2.CAP_DSHOW
+        )
         self.exposure: int = 0
         self.color_temp: int = 3000
         self.init_camera_settings()
