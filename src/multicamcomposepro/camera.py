@@ -5,7 +5,8 @@ from platform import system
 from typing import Dict, List, Optional
 
 import cv2
-from utils import Warehouse
+
+from .utils import Warehouse
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -30,12 +31,13 @@ class CameraManager:
             warehouse = Warehouse()
             camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
         """
-        self.warehouse = warehouse
-        self.test_anomaly_images = test_anomaly_images
-        self.train_images = train_images
+        self.warehouse: Warehouse = warehouse
+        self.test_anomaly_images: int = test_anomaly_images
+        self.train_images: int = train_images
+        self.captures: List = []
         self.load_camera_config()
         self.load_camera_mapping()
-        self.camera_angles = [
+        self.camera_angles: List = [
             "cam_0_left",
             "cam_1_right",
             "cam_2_front",
