@@ -2,7 +2,7 @@ import json
 import logging
 import os
 from platform import system
-from typing import List, Dict, Optional 
+from typing import List, Dict, Optional
 import cv2
 from utils import Warehouse
 
@@ -11,18 +11,20 @@ os_name = system()
 
 
 class CameraManager:
-    def __init__(self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10) -> None:
+    def __init__(
+        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10
+    ) -> None:
         """
         Initialize the CameraManager object.
-        
+
         This method sets up the initial state of the CameraManager, including loading camera configurations and mappings.
-        
+
         :param warehouse: Warehouse object containing object and anomaly information. This object guides the image capturing process.
         :param test_anomaly_images: Number of test anomaly images to capture. If set to 5, it means 5 test anomaly images will be captured.
         :param train_images: Number of training images to capture.
 
         :raises: TODO Add exceptions.
-                
+
         Example:
             warehouse = Warehouse()
             camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
@@ -52,10 +54,10 @@ class CameraManager:
     def initialize_cameras(self) -> None:
         """
         Initialize the camera settings and configurations.
-        
-        This method sets up the camera configurations based on the operating system 
+
+        This method sets up the camera configurations based on the operating system
         and pre-defined settings. It should be called before capturing any images.
-        
+
         :raises: TODO Add exceptions.
         """
         self.captures = []
@@ -79,13 +81,13 @@ class CameraManager:
     def load_camera_config(self, filename: str = "camera_config.json") -> None:
         """
         Load camera configurations from a JSON file.
-        
+
         This method reads camera settings like exposure and color temperature from a JSON file.
-        
+
         :param filename: Name of the JSON file containing camera configurations.
-        
+
         :raises FileNotFoundError: If the specified JSON file is not found.
-        
+
         Example:
             load_camera_config("custom_camera_config.json")
         """
@@ -100,9 +102,7 @@ class CameraManager:
             logging.warning(f"{filename} not found! Using default camera settings.")
 
     def load_camera_mapping(self, filename: str = "camera_config.json") -> None:
-        """
-        
-        """
+        """ """
         if os.path.exists(filename):
             with open(filename, "r") as f:
                 data = json.load(f)
@@ -117,7 +117,7 @@ class CameraManager:
         Sort camera angles based on the loaded camera mapping.
 
         This method sorts the camera angles based on the camera mapping loaded from the JSON file.
-        
+
         :raises: TODO Add exceptions.
 
         Example:
@@ -138,17 +138,19 @@ class CameraManager:
             self.camera_angles = sorted_angles
             print("Sorted Camera Angles:", self.camera_angles)  # Debugging line
 
-    def capture_multiple_images(self, folder_path: str, num_pictures_to_take: int) -> None:
+    def capture_multiple_images(
+        self, folder_path: str, num_pictures_to_take: int
+    ) -> None:
         """
         Capture multiple images from different cameras and angles.
-        
+
         This method captures a specified number of images from various camera angles and saves them in the given folder.
-        
+
         :param folder_path: Directory where the captured images will be saved.
         :param num_pictures_to_take: Number of pictures to capture.
-        
+
         :raises SomeException: If capturing fails.
-        
+
         Example:
             capture_multiple_images("/path/to/save", 5)
         """
@@ -197,13 +199,15 @@ class CameraManager:
             self.capture_multiple_images(good_folder, self.test_anomaly_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
 
-    def capture_single_image(self, folder_path: str, cam_idx: int, angle: str, image_counter: int) -> None:
+    def capture_single_image(
+        self, folder_path: str, cam_idx: int, angle: str, image_counter: int
+    ) -> None:
         """
         Capture a single image from a specific camera angle.
 
         This method captures a single image from a specific camera angle and saves it in the given folder.
         Its main purpose is to be used within the capture_multiple_images() method but can be called directly if needed.
-        
+
         :param folder_path: Directory where the captured image will be saved.
         :param cam_idx: Index of the camera to use for capturing.
         :param angle: Camera angle for capturing.
