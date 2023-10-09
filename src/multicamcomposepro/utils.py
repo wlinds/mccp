@@ -1,8 +1,9 @@
 import json
 import os
-import threading
+from threading import Event, Thread
 from platform import system
-from typing import List
+from typing import List, Union, Optional
+import numpy as np
 
 import cv2
 
@@ -32,11 +33,34 @@ class CameraIdentifier:
     """
 
     def __init__(self):
-        self.camera_mapping = {}
-        self.os_name = system()
-        self.max_tested = 10  # Max USB connections / cameras
+        """
+        Initialize CameraIdentifier object.
 
-    def identify_camera(self, index, event):
+        :ivar camera_mapping: A dictionary containing the camera order with unique identifiers.
+
+        You can change max_tested value to increase/decrease the number of cameras that can be connected to the computer.
+        """
+        self.camera_mapping: dict = {}
+        self.os_name: str = system()
+        self.max_tested: int = 10  # Max USB connections / cameras
+
+    def identify_camera(self, index: Union[int, str], event: Event) -> None:
+        """
+        Opens a video capture device with the given index and displays its frames in a window.
+        The window is closed when the 'q' key is pressed or the given event is set.
+
+        :param index: The index of the video capture device to open.
+        :param event: An event object that can be used to signal the method to stop displaying frames. using
+
+        :raises cv2.error: If the video capture device cannot be opened.
+
+        Example:
+        Open the video capture device with index 0 and display its frames in a window.
+        identify_camera(0, stop_event)
+        Wait for the user to press the 'q' key or signal the stop event.
+        stop_event.wait()
+
+        """
         cap = (
             cv2.VideoCapture(index, cv2.CAP_DSHOW)
             if self.os_name == "Windows"
@@ -50,7 +74,12 @@ class CameraIdentifier:
         cap.release()
         cv2.destroyAllWindows()
 
-    def save_to_json(self, filename="camera_config.json"):
+    def save_to_json(self, filename: str = "camera_config.json") -> None:
+        """
+        Saves the camera order with unique identifiers to a JSON file.
+
+        :param filename: The name of the JSON file to save the camera order to.
+        """
         # Read existing data
         if os.path.exists(filename):
             with open(filename, "r") as f:
@@ -65,7 +94,14 @@ class CameraIdentifier:
         with open(filename, "w") as f:
             json.dump(data, f)
 
-    def get_camera_count(self):
+    def get_camera_count(self) -> int:
+        """
+        Checks to see how many cameras are connected to the computer.
+
+        :return: The number of cameras connected to the computer.
+        :rtype: int
+
+        """
         for i in range(self.max_tested):
             cap = (
                 cv2.VideoCapture(i, cv2.CAP_DSHOW)
@@ -77,11 +113,19 @@ class CameraIdentifier:
                 return i
         return self.max_tested
 
-    def identify_all_cameras(self):
+    def identify_all_cameras(self) -> None:
+        """
+        Allows the user to manually enter a unique identifier for each camera connected to the computer.
+
+        :raises cv2.error: If the video capture device cannot be opened.
+
+        Example:
+        Creates a list of unique identifiers for each camera connected to the computer.
+        """
         number_cameras = self.get_camera_count()
         for i in range(number_cameras):
-            event = threading.Event()
-            thread = threading.Thread(target=self.identify_camera, args=(i, event))
+            event = Event()
+            thread = Thread(target=self.identify_camera, args=(i, event))
             thread.start()
             identifier = input(f"Enter a unique identifier for camera at index {i}: ")
             event.set()
@@ -94,7 +138,12 @@ class CameraIdentifier:
             else:
                 self.camera_mapping[identifier] = i
 
-    def camera_config(self):
+    def camera_identifier(self) -> None:
+        """
+        Checks to see if the camera_config.json file exists and if it contains the 'Camera Order' key.
+
+        If the file does not exist or the 'Camera Order' key is not present, the user is prompted to identify all connected cameras.
+        """
         # Check if camera_config.json exists
         if not os.path.exists("camera_config.json"):
             print("camera_config.json not found. Running CameraIdentifier...")
@@ -124,19 +173,27 @@ class CameraConfigurator:
     If another value is chosen during the setup it will be saved to all connected cameras.
     """
 
-    def __init__(self, device_id=0):
-        self.captureDevice = cv2.VideoCapture(device_id, cv2.CAP_DSHOW)
-        self.exposure = 0
-        self.color_temp = 3000
+    def __init__(self, device_id: int = 0) -> None:
+        self.captureDevice: cv2.VideoCapture = cv2.VideoCapture(device_id, cv2.CAP_DSHOW)
+        self.exposure: int = 0
+        self.color_temp: int = 3000
         self.init_camera_settings()
 
-    def init_camera_settings(self):
+    def init_camera_settings(self) -> None:
+        """
+        Set camera settings to default values.
+        """
         self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
         self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
 
-    def camera_text_overlay(self, frame):
+    def camera_text_overlay(self, frame: np.ndarray) -> None:
+        """
+        Adds text overlay to frame with current exposure and color temperature.
+
+        :param frame: The frame to add the text overlay to.
+        """
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1
         font_color = (255, 255, 255)
@@ -164,7 +221,12 @@ class CameraConfigurator:
             line_type,
         )
 
-    def update_camera_settings(self, key):
+    def update_camera_settings(self, key: int) -> None:
+        """
+        Checks if buttons 1, 2, 4 or 5 are pressed and updates the camera settings accordingly.
+
+        :param key: The key that was pressed.
+        """
         if key == ord("2"):
             self.exposure += 1
             self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
@@ -178,7 +240,12 @@ class CameraConfigurator:
             self.color_temp -= 50
             self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
 
-    def save_to_json(self, filename="camera_config.json"):
+    def save_to_json(self, filename: str = "camera_config.json"):
+        """
+        Saves the camera order with unique identifiers to a JSON file.
+
+        :param filename: The name of the JSON file to save the camera order to.
+        """
         # Read existing data
         if os.path.exists(filename):
             with open(filename, "r") as f:
@@ -196,7 +263,10 @@ class CameraConfigurator:
         with open(filename, "w") as f:
             json.dump(data, f)
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Runs the camera configurator.
+        """
         while self.captureDevice.isOpened():
             ret, frame = self.captureDevice.read()
             key = cv2.waitKey(1)
@@ -212,7 +282,10 @@ class CameraConfigurator:
         self.captureDevice.release()
         cv2.destroyAllWindows()
 
-    def camera_configurator(self):
+    def camera_configurator(self) -> None:
+        """
+        Configures the camera settings based on the existing JSON file or creates a new one.
+        """
         # Check if camera_settings.json exists
         if not os.path.exists("camera_config.json"):
             print("camera_settings.json not found. Running CameraConfigurator...")
@@ -246,18 +319,27 @@ class Warehouse:
     Class for building a structurized data warehouse for train|test images.
     """
 
-    def __init__(self):
-        self.created_dirs = []
-        self.created_sub_dirs = []
-        self.created_nested_sub_dirs = []
-        self.object_name = str()
-        self.anomalies = []  # Used in camera.py
+    def __init__(self) -> None:
+        self.created_dirs: List[str] = []
+        self.created_sub_dirs: List[str] = []
+        self.created_nested_sub_dirs: List[str] = []
+        self.object_name: str = str()
+        self.anomalies: List[str] = []  # Used in camera.py
 
-    def clean_folder_name(self, folder_name: str):
+    def clean_folder_name(self, folder_name: str) -> str:
+        """
+        Replaces spaces in folder name with underscores.
+
+        :param folder_name: The folder name to clean.
+        :return: The cleaned folder name.
+
+        Example:
+        clean_folder_name("my folder") -> "my_folder"
+        """
         cleaned_name = folder_name.replace(" ", "_")
         return cleaned_name
 
-    def create_directory(self, path: str):
+    def create_directory(self, path: str) -> None:
         """
         Create a directory at the given path and add its name to the created_dirs list.
 
@@ -272,7 +354,9 @@ class Warehouse:
                 print(f"An error occurred while creating {path}: {e}")
 
     def build(
-        self, object_name, anomalies: List[str] = ["Default1", "Default2", "Default3"]
+        self,
+        object_name: str,
+        anomalies: Optional[List[str]] = ["Default1", "Default2", "Default3"],
     ):
         """
         Build the data warehouse directory structure based on the given object name and anomalies.
@@ -306,7 +390,7 @@ class Warehouse:
                 nested_sub_dir_path = os.path.join(sub_dir_path, nested_sub_dir)
                 self.create_directory(nested_sub_dir_path)
 
-    def __str__(self):
+    def __str__(self) -> str:
         ret = ""
         if self.created_dirs:
             ret += f"Created the following directories: {', '.join(self.created_dirs)} in {self.object_name} \n"

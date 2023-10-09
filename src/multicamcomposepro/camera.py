@@ -2,7 +2,8 @@ import json
 import logging
 import os
 from platform import system
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 import cv2
 from utils import Warehouse
 

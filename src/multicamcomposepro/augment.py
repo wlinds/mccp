@@ -1,8 +1,10 @@
 import logging
 import os
 import random
+
 import cv2
 import numpy as np
+
 
 class DataAugmenter:
     def __init__(
@@ -77,7 +79,6 @@ class DataAugmenter:
                 logging.info(f"Finished augmentation of {filename} as {output_file}")
                 print(f"Finished augmentation of {filename} as {output_file}")
 
-
     def augment_images(self, selected_images=None):
         image_files = selected_images if selected_images else os.listdir(self.input_dir)
 
@@ -117,14 +118,18 @@ class DataAugmenter:
 
         return img, factor_str
 
-
-
     def random_exposure(self, img):
         # Higher temperature values overexposes, lower temperature values underexposes
         exposure_factor = 1.0
 
-        while 1 - (abs(self.temperature * 0.01)) <= exposure_factor <= 1 + (abs(self.temperature * 0.04)):
-            exposure_factor = np.random.uniform(1.0 - (abs(self.temperature * 0.1)), 1.0) + (self.temperature * 0.1)
+        while (
+            1 - (abs(self.temperature * 0.01))
+            <= exposure_factor
+            <= 1 + (abs(self.temperature * 0.04))
+        ):
+            exposure_factor = np.random.uniform(
+                1.0 - (abs(self.temperature * 0.1)), 1.0
+            ) + (self.temperature * 0.1)
 
         img = img * exposure_factor
 
@@ -147,16 +152,23 @@ class DataAugmenter:
         min_distortion_factor = 0.99 - (abs(self.temperature)) * 0.02
         max_distortion_factor = 1.01 + (abs(self.temperature)) * 0.02
 
-        distortion_factor_x = np.random.uniform(min_distortion_factor, max_distortion_factor)
-        distortion_factor_y = np.random.uniform(min_distortion_factor, max_distortion_factor)
+        distortion_factor_x = np.random.uniform(
+            min_distortion_factor, max_distortion_factor
+        )
+        distortion_factor_y = np.random.uniform(
+            min_distortion_factor, max_distortion_factor
+        )
 
         height, width = img.shape[:2]
 
         # perspective transformation matrix
-        distortion_matrix = np.array([
-            [distortion_factor_x, 0, 0],
-            [0, distortion_factor_y, 0],
-        ], dtype=np.float32)
+        distortion_matrix = np.array(
+            [
+                [distortion_factor_x, 0, 0],
+                [0, distortion_factor_y, 0],
+            ],
+            dtype=np.float32,
+        )
 
         distorted_img = cv2.warpAffine(img, distortion_matrix, (width, height))
 
