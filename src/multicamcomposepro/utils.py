@@ -208,6 +208,152 @@ class CameraIdentifier:
         with open(filename, "w") as f:
             json.dump(data, f)
 
+class CameraConfigurator:
+    """
+    Utility Class for configuring camera exposure and color temperature.
+    Sets exposure and color temperature to 0 and 3000 respectively by default.
+    If another value is chosen during the setup it will be saved to all connected cameras.
+    """
+
+    def __init__(self, device_id: int = 0) -> None:
+        self.captureDevice: cv2.VideoCapture = cv2.VideoCapture(
+            device_id, cv2.CAP_DSHOW
+        )
+        self.exposure: int = 0
+        self.color_temp: int = 3000
+        self.init_camera_settings()
+
+    def init_camera_settings(self) -> None:
+        """
+        Set camera settings to default values.
+        """
+        self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
+        self.captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
+
+    def camera_text_overlay(self, frame: np.ndarray) -> None:
+        """
+        Adds text overlay to frame with current exposure and color temperature.
+
+        :param frame: The frame to add the text overlay to.
+        """
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1
+        font_color = (255, 255, 255)
+        line_type = 2
+
+        position_exposure = (10, frame.shape[0] - 40)
+        cv2.putText(
+            frame,
+            f"Exposure: {self.exposure}",
+            position_exposure,
+            font,
+            font_scale,
+            font_color,
+            line_type,
+        )
+
+        position_color_temp = (10, frame.shape[0] - 80)
+        cv2.putText(
+            frame,
+            f"Color Temp: {self.color_temp}",
+            position_color_temp,
+            font,
+            font_scale,
+            font_color,
+            line_type,
+        )
+
+    def update_camera_settings(self, key: int) -> None:
+        """
+        Checks if buttons 1, 2, 4 or 5 are pressed and updates the camera settings accordingly.
+
+        :param key: The key that was pressed.
+        """
+        if key == ord("2"):
+            self.exposure += 1
+            self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        elif key == ord("1"):
+            self.exposure -= 1
+            self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
+        elif key == ord("5"):
+            self.color_temp += 50
+            self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
+        elif key == ord("4"):
+            self.color_temp -= 50
+            self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
+
+    def save_to_json(self, filename: str = "camera_config.json"):
+        """
+        Saves the camera order with unique identifiers to a JSON file.
+
+        :param filename: The name of the JSON file to save the camera order to.
+        """
+        # Read existing data
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                data = json.load(f)
+        else:
+            data = {}
+
+        # Update with new data
+        data["CameraSettings"] = {
+            "Camera Exposure": self.exposure,
+            "Camera Color Temperature": self.color_temp,
+        }
+
+        # Write back to file
+        with open(filename, "w") as f:
+            json.dump(data, f)
+
+    def run(self) -> None:
+        """
+        Runs the camera configurator.
+        """
+        while self.captureDevice.isOpened():
+            ret, frame = self.captureDevice.read()
+            key = cv2.waitKey(1)
+
+            self.update_camera_settings(key)
+            self.camera_text_overlay(frame)
+
+            cv2.imshow("Webcam", frame)
+
+            if key == ord("q"):
+                break
+
+        self.captureDevice.release()
+        cv2.destroyAllWindows()
+
+    def camera_configurator(self) -> None:
+        """
+        Configures the camera settings based on the existing JSON file or creates a new one.
+        """
+        # Check if camera_settings.json exists
+        if not os.path.exists("camera_config.json"):
+            print("camera_settings.json not found. Running CameraConfigurator...")
+            camera_configurator = CameraConfigurator()
+            camera_configurator.run()
+            camera_configurator.save_to_json()
+        else:
+            # Check if 'Camera Exposure' or 'Camera Color Temperature' exists in the JSON file
+            with open("camera_config.json", "r") as f:
+                data = json.load(f)
+                camera_settings = data.get("CameraSettings", {})
+                if (
+                    "Camera Exposure" not in camera_settings
+                    or "Camera Color Temperature" not in camera_settings
+                ):
+                    print(
+                        '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
+                    )
+                    camera_configurator = CameraConfigurator()
+                    camera_configurator.run()
+                    camera_configurator.save_to_json()
+
+
+
 def camera_text_overlay(frame, camera_name):
     font, pos = cv2.FONT_HERSHEY_SIMPLEX, (10, frame.shape[0] - 10)
     font_scale, font_color = 0.5, (255, 255, 255)
@@ -288,6 +434,7 @@ class Warehouse:
                 f"Directory {self.object_name} already exist! Nothing has been created."
             )
         return ret
+
 
 if __name__ == "__main__":
     #c = CameraIdentifier2()
