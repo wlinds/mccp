@@ -7,10 +7,9 @@ from typing import List, Optional, Union
 import cv2
 import numpy as np
 
-class CameraIdentifier2:
+class CameraIdentifier:
     def __init__(self, n_cameras: int = 10):
         self.camera_mapping: dict = {}
-        self.os_name = system()
         self.max_usb_connection: int = n_cameras
         self.init()
 
@@ -33,7 +32,7 @@ class CameraIdentifier2:
         """
         
         # Check which cameras are able to open stream TODO: refactor, this is very clunky
-        if self.os_name != "Windows":
+        if system() != "Windows":
             for i in range(self.max_usb_connection):
                 if not cv2.VideoCapture(i).isOpened():
                     self.max_usb_connection -= 1
@@ -45,9 +44,9 @@ class CameraIdentifier2:
         # Iterate over all accessible cameras
         for i in range(self.max_usb_connection):
             camera_id = None
-            cap = (cv2.VideoCapture(i, cv2.CAP_DSHOW) if self.os_name == "Windows" else cv2.VideoCapture(i))
+            cap = (cv2.VideoCapture(i, cv2.CAP_DSHOW) if system() == "Windows" else cv2.VideoCapture(i))
 
-            # Uset input in thread
+            # User input in thread
             def user_input_thread():
                 nonlocal camera_id
                 while camera_id is None:
@@ -58,7 +57,7 @@ class CameraIdentifier2:
 
             while camera_id is None:
                 ret, frame = cap.read()
-                cv2.imshow(f"camera {i}", frame)
+                cv2.imshow(f"mccp.CameraIdentifier | {cv2.__version__=} camera_{i} ", frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
                     break
@@ -86,128 +85,6 @@ class CameraIdentifier2:
             json.dump(data, f)
         print("Camera Order saved.")
 
-class CameraIdentifier:
-    """
-    Opens Cameras one by one and asks the user to identify them.
-    Saves camera order with unique identifiers to camera_config.json.
-    Order is used in CameraManager to display the camera streams in the correct order.
-    """
-
-    def __init__(self):
-        self.camera_mapping: dict = {}
-        self.os_name: str = system()
-        self.max_tested: int = 10  # Max USB connected cameras
-
-    def identify_camera(self, index: Union[int, str], event: Event) -> None:
-        """
-        Opens a video capture device with the given index and displays its frames in a window.
-        The window is closed when the 'q' key is pressed or the given event is set.
-
-        :param index: The index of the video capture device to open.
-        :param event: An event object that can be used to signal the method to stop displaying frames. using
-
-        :raises cv2.error: If the video capture device cannot be opened.
-
-        Example:
-        Open the video capture device with index 0 and display its frames in a window.
-        identify_camera(0, stop_event)
-        Wait for the user to press the 'q' key or signal the stop event.
-        stop_event.wait()
-
-        """
-
-        # Debug
-        # cap = (
-        #     cv2.VideoCapture(index, cv2.CAP_DSHOW)
-        #     if self.os_name == "Windows"
-        #     else cv2.VideoCapture(index)
-        # )
-
-        cap = cv2.VideoCapture(index)
-
-        while not event.is_set():
-            ret, frame = cap.read()
-            cv2.imshow(f"Camera {index}", frame)
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
-
-    def get_camera_count(self) -> int:
-        """
-        Iterates over range(max_tested). Returns n found cameras.
-        """
-        for i in range(self.max_tested):
-            # Debug
-            # cap = (
-            #     cv2.VideoCapture(i, cv2.CAP_DSHOW)
-            #     if self.os_name == "Windows"
-            #     else cv2.VideoCapture(i)
-            # )
-            cap = cv2.VideoCapture(i)
-            if not cap.isOpened():
-                cap.release()
-                return i
-        return self.max_tested
-
-    def identify_all_cameras(self) -> None:
-        """
-        Allows the user to enter a unique identifier for each camera connected to the computer.
-
-        :raises cv2.error: If the video capture device cannot be opened.
-
-        """
-        number_cameras = self.get_camera_count()
-        for i in range(number_cameras):
-            event = Event()
-            thread = Thread(target=self.identify_camera, args=(i, event))
-            thread.start()
-            identifier = input(f"Enter a unique identifier for camera at index {i}: ")
-            event.set()
-            thread.join()
-            if identifier.lower() == "skip":
-                if "skip" in self.camera_mapping:
-                    self.camera_mapping["skip"].append(i)
-                else:
-                    self.camera_mapping["skip"] = [i]
-            else:
-                self.camera_mapping[identifier] = i
-
-    def run_camera_identifier(self) -> None:
-        """
-        Checks to see if the camera_config.json file exists and if it contains the 'Camera Order' key.
-
-        If'Camera Order' key is not present in camera_config.json or file not found, the user is prompted to identify all connected cameras.
-        """
-        # Check if camera_config.json exists
-        if not os.path.exists("camera_config.json"):
-            print("camera_config.json not found. Running CameraIdentifier...")
-            camera_identifier = CameraIdentifier() # TODO: Recursion
-            camera_identifier.identify_all_cameras()
-            camera_identifier.save_to_json()
-        else:
-            # Check if 'Camera Order' exists in the JSON file
-            with open("camera_config.json", "r") as f:
-                data = json.load(f)
-                if "Camera Order" not in data:
-                    print(
-                        '"Camera Order" not found in camera_config.json. Running CameraIdentifier...'
-                    )
-                    camera_identifier = CameraIdentifier()
-                    camera_identifier.identify_all_cameras()
-                    camera_identifier.save_to_json()
-
-    def save_to_json(self, filename: str = "camera_config.json") -> None:
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-        else:
-            data = {}
-        data["Camera Order"] = self.camera_mapping
-        with open(filename, "w") as f:
-            json.dump(data, f)
-
 class CameraConfigurator:
     """
     Utility Class for configuring camera exposure and color temperature.
@@ -216,61 +93,37 @@ class CameraConfigurator:
     """
 
     def __init__(self, device_id: int = 0) -> None:
-        self.captureDevice: cv2.VideoCapture = cv2.VideoCapture(
-            device_id, cv2.CAP_DSHOW
-        )
+        self.captureDevice = cv2.VideoCapture(device_id)
+        self.device_id = device_id
         self.exposure: int = 0
         self.color_temp: int = 3000
         self.init_camera_settings()
 
     def init_camera_settings(self) -> None:
-        """
-        Set camera settings to default values.
-        """
+        if system() == "Windows":
+            self.captureDevice = cv2.VideoCapture(self.device_id, cv2.CAP_DSHOW)
         self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
         self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
 
     def camera_text_overlay(self, frame: np.ndarray) -> None:
-        """
-        Adds text overlay to frame with current exposure and color temperature.
-
-        :param frame: The frame to add the text overlay to.
-        """
-        font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 1
-        font_color = (255, 255, 255)
-        line_type = 2
-
+        font, font_scale = cv2.FONT_HERSHEY_SIMPLEX, 1
+        font_color, line_type = (255, 255, 255), 2
         position_exposure = (10, frame.shape[0] - 40)
+        position_color_temp = (10, position_exposure[1] - 40)
+
         cv2.putText(
-            frame,
-            f"Exposure: {self.exposure}",
-            position_exposure,
-            font,
-            font_scale,
-            font_color,
-            line_type,
+            frame, f"Exposure: {self.exposure}", position_exposure,
+            font, font_scale, font_color, line_type,
         )
 
-        position_color_temp = (10, frame.shape[0] - 80)
         cv2.putText(
-            frame,
-            f"Color Temp: {self.color_temp}",
-            position_color_temp,
-            font,
-            font_scale,
-            font_color,
-            line_type,
+            frame, f"Color Temp: {self.color_temp}", position_color_temp,
+            font, font_scale, font_color, line_type,
         )
 
     def update_camera_settings(self, key: int) -> None:
-        """
-        Checks if buttons 1, 2, 4 or 5 are pressed and updates the camera settings accordingly.
-
-        :param key: The key that was pressed.
-        """
         if key == ord("2"):
             self.exposure += 1
             self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
@@ -285,32 +138,20 @@ class CameraConfigurator:
             self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
 
     def save_to_json(self, filename: str = "camera_config.json"):
-        """
-        Saves the camera order with unique identifiers to a JSON file.
-
-        :param filename: The name of the JSON file to save the camera order to.
-        """
-        # Read existing data
         if os.path.exists(filename):
             with open(filename, "r") as f:
                 data = json.load(f)
         else:
             data = {}
-
-        # Update with new data
         data["CameraSettings"] = {
             "Camera Exposure": self.exposure,
             "Camera Color Temperature": self.color_temp,
         }
-
-        # Write back to file
         with open(filename, "w") as f:
             json.dump(data, f)
 
     def run(self) -> None:
-        """
-        Runs the camera configurator.
-        """
+        self.captureDevice.open(0)
         while self.captureDevice.isOpened():
             ret, frame = self.captureDevice.read()
             key = cv2.waitKey(1)
@@ -318,7 +159,7 @@ class CameraConfigurator:
             self.update_camera_settings(key)
             self.camera_text_overlay(frame)
 
-            cv2.imshow("Webcam", frame)
+            cv2.imshow(f"mccp.CameraConfigurator | {cv2.__version__=})", frame)
 
             if key == ord("q"):
                 break
@@ -327,32 +168,20 @@ class CameraConfigurator:
         cv2.destroyAllWindows()
 
     def camera_configurator(self) -> None:
-        """
-        Configures the camera settings based on the existing JSON file or creates a new one.
-        """
-        # Check if camera_settings.json exists
-        if not os.path.exists("camera_config.json"):
-            print("camera_settings.json not found. Running CameraConfigurator...")
-            camera_configurator = CameraConfigurator()
-            camera_configurator.run()
-            camera_configurator.save_to_json()
-        else:
-            # Check if 'Camera Exposure' or 'Camera Color Temperature' exists in the JSON file
-            with open("camera_config.json", "r") as f:
+
+        with open("camera_config.json", "r") as f:
                 data = json.load(f)
                 camera_settings = data.get("CameraSettings", {})
-                if (
-                    "Camera Exposure" not in camera_settings
-                    or "Camera Color Temperature" not in camera_settings
-                ):
-                    print(
-                        '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
-                    )
-                    camera_configurator = CameraConfigurator()
-                    camera_configurator.run()
-                    camera_configurator.save_to_json()
+        if (
+            "Camera Exposure" not in camera_settings
+            or "Camera Color Temperature" not in camera_settings
+        ):
+            print(
+                '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
+            )
 
-
+        self.run()
+        self.save_to_json()
 
 def camera_text_overlay(frame, camera_name):
     font, pos = cv2.FONT_HERSHEY_SIMPLEX, (10, frame.shape[0] - 10)
@@ -416,6 +245,7 @@ class Warehouse:
                 nested_sub_dir = self.clean_folder_name(nested_sub_dir)
                 nested_sub_dir_path = os.path.join(sub_dir_path, nested_sub_dir)
                 self.create_directory(nested_sub_dir_path)
+        print(self)
 
     def __str__(self) -> str:
         ret = ""
@@ -435,8 +265,9 @@ class Warehouse:
             )
         return ret
 
-
 if __name__ == "__main__":
-    #c = CameraIdentifier2()
+    w = Warehouse()
+    w.build()
+    c = CameraIdentifier()
     conf = CameraConfigurator()
-    conf.run()
+    conf.camera_configurator()
