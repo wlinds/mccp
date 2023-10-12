@@ -33,7 +33,7 @@ class DataAugmenter:
         if img is None:
             logging.error(f"Image is None for {filename}")
             return
-
+        print(filename)
         for i in range(self.num_augmented_images):
             logging.info(f"Augmenting {filename}. Iteration: {i}")
 
@@ -55,10 +55,9 @@ class DataAugmenter:
             img, val = self.random_gaussian_blur(img)
             logging.info(f"Iter. {i}: {filename} - Blur rad: {val}")
 
-            # Create an output directory within the current subdirectory if it doesn't exist
-
             output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
             output_path = os.path.join(output_subdir, output_file)
+            print(f"Writing to: {output_path}")
             cv2.imwrite(output_path, img)
 
             if self.logging_enabled:
@@ -75,16 +74,14 @@ class DataAugmenter:
         for subdir in subdirs:
             subdir_path = os.path.join(self.object_dir, subdir)
 
-            # Check if the folder already contains augmented images
-            if any("aug" in filename for filename in os.listdir(subdir_path)):
-                print(f"Skipping {subdir} as it already contains augmented images.")
-                continue
-
             image_files = (
                 selected_images if selected_images else os.listdir(subdir_path)
             )
 
             for img_file in image_files:
+                if "_aug_" in img_file:
+                    continue  # Skip already augmented files to avoid aug_1_aug_2_aug_3 etc.
+
                 logging.info(f"Processing {img_file} in {subdir}")
                 img_path = os.path.join(subdir_path, img_file)
                 img = cv2.imread(img_path)
@@ -92,7 +89,7 @@ class DataAugmenter:
                 if self.resolution is None:
                     self.resolution = img.shape[:2]
 
-                self.process_image(img, img_file, subdir_path)  # Changed this line
+                self.process_image(img, img_file, subdir_path)
 
         print("Data augmentation complete.")
 
@@ -216,6 +213,6 @@ class DataAugmenter:
 
 
 if __name__ == "__main__":
-    # augmenter = DataAugmenter(object_name="o_b_j_e_ct", temperature=50)
-    # augmenter.augment_images()
-    DataAugmenter.remove_augmented_files("o_b_j_e_ct")
+    augmenter = DataAugmenter(object_name="o_b_j_e_ct", temperature=0.5)
+    augmenter.augment_images()
+    # DataAugmenter.remove_augmented_files("o_b_j_e_ct")
