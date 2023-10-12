@@ -5,7 +5,6 @@ from platform import system
 from typing import Dict, List, Optional
 
 import cv2
-
 from utils import Warehouse
 
 logging.basicConfig(level=logging.INFO)

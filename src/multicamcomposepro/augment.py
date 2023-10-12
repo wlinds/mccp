@@ -84,6 +84,9 @@ class DataAugmenter:
                 logging.info(f"Processing {img_file} in {subdir}")
                 img_path = os.path.join(subdir_path, img_file)
                 img = cv2.imread(img_path)
+                if img is None:
+                    logging.error(f"Could not read {img_path}")
+                    continue
 
                 if self.resolution is None:
                     self.resolution = img.shape[:2]

@@ -1,3 +1,7 @@
+# To run manually
+# Unix systems: run from root with python3 -m tests.test_camera
+# For Windows: $ python -m pytest tests/test_camera.py
+
 from unittest.mock import Mock, mock_open, patch
 
 import pytest

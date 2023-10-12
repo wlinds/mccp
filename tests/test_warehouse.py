@@ -1,4 +1,5 @@
-# To manually test, run from root with python3 -m tests.test_main
+# To manually test, run from root with python3 -m tests.test_warehouse
+# For Windows: $ python -m pytest  tests/test_warehouse.py
 import os
 from unittest.mock import Mock, patch
 
