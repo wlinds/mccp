@@ -9,25 +9,18 @@ import numpy as np
 class DataAugmenter:
     def __init__(
         self,
-        input_dir,
-        output_dir,
+        object_name="object_name",
         num_augmented_images=3,
-        output_image_size=(640, 480),
-        create_dir=True,
         temperature=1.0,
         logging_enabled=True,
     ):
-        self.input_dir = input_dir
-        self.output_dir = output_dir
+        self.object_dir = os.path.join(
+            os.getcwd(), "data_warehouse", "dataset", object_name, "train", "good"
+        )
         self.num_augmented_images = num_augmented_images
-        self.output_image_size = output_image_size
-        self.create_dir = create_dir
         self.temperature = temperature
         self.resolution = None
         self.logging_enabled = logging_enabled
-
-        if create_dir and not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
 
         if logging_enabled:
             logging.basicConfig(
@@ -36,7 +29,7 @@ class DataAugmenter:
                 format="%(asctime)s - %(levelname)s - %(message)s",
             )
 
-    def process_image(self, img, filename):
+    def process_image(self, img, filename, output_subdir):
         if img is None:
             logging.error(f"Image is None for {filename}")
             return
@@ -62,17 +55,10 @@ class DataAugmenter:
             img, val = self.random_gaussian_blur(img)
             logging.info(f"Iter. {i}: {filename} - Blur rad: {val}")
 
-            # img, val = self.random_texture_overlay(img)
-
-            # img, val = self.random_crop(img)
-            # logging.info(f"Iter. {i}: {filename} - Crop factor: {val}")
-
-            if img is None:
-                logging.error(f"Image is None after augmentation for {filename}")
-                return
+            # Create an output directory within the current subdirectory if it doesn't exist
 
             output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
-            output_path = os.path.join(self.output_dir, output_file)
+            output_path = os.path.join(output_subdir, output_file)
             cv2.imwrite(output_path, img)
 
             if self.logging_enabled:
@@ -80,17 +66,33 @@ class DataAugmenter:
                 print(f"Finished augmentation of {filename} as {output_file}")
 
     def augment_images(self, selected_images=None):
-        image_files = selected_images if selected_images else os.listdir(self.input_dir)
+        subdirs = [
+            d
+            for d in os.listdir(self.object_dir)
+            if os.path.isdir(os.path.join(self.object_dir, d))
+        ]
 
-        for img_file in image_files:
-            logging.info(f"Processing {img_file}")
-            img_path = os.path.join(self.input_dir, img_file)
-            img = cv2.imread(img_path)
+        for subdir in subdirs:
+            subdir_path = os.path.join(self.object_dir, subdir)
 
-            if self.resolution is None:
-                self.resolution = img.shape[:2]
+            # Check if the folder already contains augmented images
+            if any("aug" in filename for filename in os.listdir(subdir_path)):
+                print(f"Skipping {subdir} as it already contains augmented images.")
+                continue
 
-            self.process_image(img, img_file)
+            image_files = (
+                selected_images if selected_images else os.listdir(subdir_path)
+            )
+
+            for img_file in image_files:
+                logging.info(f"Processing {img_file} in {subdir}")
+                img_path = os.path.join(subdir_path, img_file)
+                img = cv2.imread(img_path)
+
+                if self.resolution is None:
+                    self.resolution = img.shape[:2]
+
+                self.process_image(img, img_file, subdir_path)  # Changed this line
 
         print("Data augmentation complete.")
 
@@ -187,11 +189,33 @@ class DataAugmenter:
         # TODO
         return img
 
+        # Remove augmented images from the chosen dataset
+
+    def remove_augmented_files(object_name):
+        """
+        Used to remove augmented files from the object_name subdirectory of the dataset directory
+        Example: remove_augmented_files('apple')
+        :param: object_name: Name of the object to remove augmented files from
+        """
+        object_dir = os.path.join(
+            os.getcwd(), "data_warehouse", "dataset", object_name, "train", "good"
+        )
+        subdirs = [
+            d
+            for d in os.listdir(object_dir)
+            if os.path.isdir(os.path.join(object_dir, d))
+        ]
+
+        for subdir in subdirs:
+            subdir_path = os.path.join(object_dir, subdir)
+            for filename in os.listdir(subdir_path):
+                if "aug" in filename:
+                    file_path = os.path.join(subdir_path, filename)
+                    os.remove(file_path)
+                    print(f"Removed {filename}")
+
 
 if __name__ == "__main__":
-    input_dir = "/Users/helvetica/_anodet/data/purple_duck/train/good/test_0"
-    output_dir = "/Users/helvetica/_anodet/data/purple_duck/train/good/aug"
-
-    augmenter = DataAugmenter(input_dir, output_dir, temperature=1.1)
-
-    augmenter.augment_images()
+    # augmenter = DataAugmenter(object_name="o_b_j_e_ct", temperature=50)
+    # augmenter.augment_images()
+    DataAugmenter.remove_augmented_files("o_b_j_e_ct")
