@@ -57,7 +57,6 @@ class DataAugmenter:
 
             output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
             output_path = os.path.join(output_subdir, output_file)
-            print(f"Writing to: {output_path}")
             cv2.imwrite(output_path, img)
 
             if self.logging_enabled:
