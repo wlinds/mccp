@@ -34,7 +34,7 @@ setup(
         "multicamcompose",
         "mccp",
     ],
-    name="multicamcomposepro",
+    name="mccp",
     packages=find_packages(include=["multicamcomposepro", "multicamcomposepro.*"]),
     setup_requires=setup_requirements,
     test_suite="tests",
