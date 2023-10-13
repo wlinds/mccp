@@ -49,6 +49,8 @@ utils.py
         Identifies and configures cameras.
     Class: CameraConfigurator
         Additional camera setup.
+    Class: DataAugmenter
+        Creates synthetic images based on images captured for training.
 
 Configuration
 
