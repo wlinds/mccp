@@ -16,7 +16,7 @@ setup(
     author_email="alexander@11a.se",
     python_requires=">=3.6",
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Natural Language :: English",
         "License :: OSI Approved :: MIT License",

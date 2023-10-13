@@ -13,31 +13,21 @@ Requirements
 
 ## Installation
 
-1. Clone the repository:
+1. Install package:
 
 ```bash
 
-git clone https://github.com/your_username/your_project_name.git
+pip install mccp
 ```
-2. Navigate to the project directory:
-```bash
 
-cd your_project_name
-```
-3. Install the required packages:
 
-```bash
-
-    pip install -r requirements.txt
-```
 ## Usage
 
-    Run the main.py script to start the application:
+Run the main.py script to start the application:
 
-```bash
 
     python main.py
-```
+
 ## Modules
 ### camera.py
 
@@ -70,4 +60,4 @@ TODO
 
 License
 
-This project is licensed under the MIT License - see the LICENSE.md file for details.
+This project is licensed under the MIT License - see the LICENSE file for details.
