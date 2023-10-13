@@ -30,6 +30,11 @@ class DataAugmenter:
             )
 
     def process_image(self, img, filename, output_subdir):
+        self.resolution = img.shape[
+            :2
+        ]  # Always sets resolution to the last image processed
+        print(f"Resolution set to: {self.resolution}")
+
         if img is None:
             logging.error(f"Image is None for {filename}")
             return
@@ -64,6 +69,7 @@ class DataAugmenter:
                 print(f"Finished augmentation of {filename} as {output_file}")
 
     def augment_images(self, selected_images=None):
+        print("augment_images_running")
         subdirs = [
             d
             for d in os.listdir(self.object_dir)
@@ -88,10 +94,9 @@ class DataAugmenter:
                     logging.error(f"Could not read {img_path}")
                     continue
 
-                if self.resolution is None:
-                    self.resolution = img.shape[:2]
-
                 self.process_image(img, img_file, subdir_path)
+                print("Image shape:", img.shape)
+                print("Resolution:", self.resolution)
 
         print("Data augmentation complete.")
 

@@ -8,6 +8,7 @@ from unittest.mock import Mock, mock_open, patch
 import cv2
 import numpy as np
 import pytest
+import os
 
 from src.multicamcomposepro.augment import DataAugmenter
 
@@ -63,4 +64,23 @@ def test_random_white_balance(mock_merge, mock_split, data_augmenter):
     assert "R:" in factor_str
 
 
-# Add more tests as needed
+# Test 5: Test Different Image Sizes
+def test_image_sizes(data_augmenter):
+    # Mocking cv2.imread to return images of different sizes
+    sizes = [(480, 480), (640, 640), (1080, 1920)]
+    mock_images = [np.zeros(size + (3,), dtype=np.uint8) for size in sizes]
+
+    with patch("cv2.imread") as mock_imread, patch("cv2.imwrite") as mock_imwrite:
+        for i, mock_img in enumerate(mock_images):
+            print("Mock image shape:", mock_img.shape)
+
+            mock_imread.return_value = mock_img
+
+            # Call the method you want to test
+            data_augmenter.process_image(mock_img, f"test_{i}.png", "./")
+
+            # Validate the behavior
+            assert data_augmenter.resolution == mock_img.shape[:2]
+
+            # Assert that cv2.imwrite was called (optional)
+            mock_imwrite.assert_called()
