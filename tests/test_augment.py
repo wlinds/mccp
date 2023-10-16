@@ -3,12 +3,12 @@
 # For Windows: $ python -m pytest tests/test_augment.py
 
 import logging
+import os
 from unittest.mock import Mock, mock_open, patch
 
 import cv2
 import numpy as np
 import pytest
-import os
 
 from src.multicamcomposepro.augment import DataAugmenter
 

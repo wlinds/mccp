@@ -6,7 +6,8 @@ from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from src.multicamcomposepro.camera import CameraManager
+from src.multicamcomposepro.camera import \
+    CameraManager  # TODO Needs to be fixed. Cant
 from src.multicamcomposepro.utils import Warehouse
 
 

@@ -2,10 +2,11 @@ import json
 import logging
 import os
 from platform import system
-from typing import Dict, List, Optional
+from typing import List
 
 import cv2
-from utils import Warehouse
+
+from .utils import Warehouse
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()

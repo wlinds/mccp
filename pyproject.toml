@@ -1,6 +1,6 @@
 [project]
 name = "mccp"
-version = "0.1.0"
+version = "0.1.1"
 authors = [
   {name = "wlinds", email = "w.lindstedt@gmail.com"},
   {name = "Rufshod", email = "alexander@11a.se"}
