@@ -26,7 +26,7 @@ class VideoCropper:
         cap.set(3, 854)  # width
         cap.set(4, 480)  # height
 
-        cv2.namedWindow('Cam')
+        cv2.namedWindow('Camera')
         cv2.setMouseCallback('Camera', self.draw_rectangle)
 
         while True:
