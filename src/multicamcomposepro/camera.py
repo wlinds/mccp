@@ -6,7 +6,7 @@ from typing import List
 
 import cv2
 
-from .utils import Warehouse
+from utils import Warehouse, CameraIdentifier
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -284,5 +284,7 @@ class CameraManager:
 if __name__ == "__main__":
     warehouse = Warehouse()
     warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
+
+    CameraIdentifier()
     camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()
