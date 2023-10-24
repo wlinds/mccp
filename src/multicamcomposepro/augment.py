@@ -5,11 +5,8 @@ import random
 import cv2
 import numpy as np
 
-def allowed_file(filename, allowed_extensions=("png", "jpg", "jpeg")):
-    if "." not in filename:
-        return False
-    ext = filename.rsplit(".", 1)[1].lower()
-    return ext in allowed_extensions
+from .utils import allowed_file
+
 
 class DataAugmenter:
     def __init__(
@@ -33,7 +30,7 @@ class DataAugmenter:
                 level=logging.DEBUG,
                 format="%(asctime)s - %(levelname)s - %(message)s",
             )
-    
+
     def process_image(self, img, filename, output_subdir):
         if not allowed_file(filename):
             logging.error(f"File type not allowed for {filename}")
