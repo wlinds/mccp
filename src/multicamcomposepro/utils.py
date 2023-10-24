@@ -14,7 +14,7 @@ def wcap(i=None):
     if system() != "Windows":
         return cv2.VideoCapture(i)
     else:
-        return (i, cv2.CAP_DSHOW)
+        return cv2.VideoCapture(i, cv2.CAP_DSHOW)
 
 class CameraIdentifier:
     """

@@ -6,7 +6,7 @@ from typing import List
 
 import cv2
 
-from utils import Warehouse, CameraIdentifier
+from utils import Warehouse, CameraIdentifier, wcap
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -66,11 +66,7 @@ class CameraManager:
         self.captures = []
         for cam_idx in range(self.num_cameras):
             print(f"Camera {cam_idx} initializing...")
-            cap = (
-                cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
-                if os_name == "Windows"
-                else cv2.VideoCapture(cam_idx)
-            )
+            cap = wcap(cam_idx)
             cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
             cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
