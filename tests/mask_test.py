@@ -22,21 +22,20 @@ class VideoCropper:
             self.end_x, self.end_y = x, y
 
     def capture_video(self):
-        cap = cv2.VideoCapture(0)
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         cap.set(3, 854)  # width
         cap.set(4, 480)  # height
 
-        cv2.namedWindow('Cam')
+        cv2.namedWindow('Camera')
         cv2.setMouseCallback('Camera', self.draw_rectangle)
 
         while True:
             ret, frame = cap.read()
-
             if ret:
                 if self.drawing:
                     cv2.rectangle(frame, (self.start_x, self.start_y), (self.end_x, self.end_y), (0, 255, 0), 2)
 
-                cv2.imshow('Cam', frame)
+                cv2.imshow('Camera', frame)
 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break

@@ -6,8 +6,7 @@ from utils import CameraConfigurator, CameraIdentifier, Warehouse
 
 
 def main():
-    camera_identifier = CameraIdentifier()
-    camera_identifier.camera_identifier()  # Check if camera_config.json exists
+    CameraIdentifier()
 
     camera_configurator = CameraConfigurator()
     camera_configurator.camera_configurator()

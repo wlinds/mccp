@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 
 import cv2
 
-from .utils import Warehouse
+from utils import Warehouse
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
