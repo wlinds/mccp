@@ -13,30 +13,30 @@ os_name = system()
 
 
 class CameraManager:
+    """
+    Simultaneous capture of train and test images, including anomalies.
+
+    :param warehouse: Warehouse object containing object and anomaly information. This object guides the image capturing process.
+    :param test_anomaly_images: Number of test anomaly images to capture. If set to 5, it means 5 test anomaly images will be captured.
+    :param train_images: Number of training images to capture.
+
+    :raises: TODO Add exceptions.
+    
+    Example:
+        warehouse = Warehouse()
+        camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
+    """
     def __init__(
         self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10
     ) -> None:
-        """
-        Initialize the CameraManager object.
-
-        This method sets up the initial state of the CameraManager, including loading camera configurations and mappings.
-
-        :param warehouse: Warehouse object containing object and anomaly information. This object guides the image capturing process.
-        :param test_anomaly_images: Number of test anomaly images to capture. If set to 5, it means 5 test anomaly images will be captured.
-        :param train_images: Number of training images to capture.
-
-        :raises: TODO Add exceptions.
-
-        Example:
-            warehouse = Warehouse()
-            camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
-        """
         self.warehouse: Warehouse = warehouse
         self.test_anomaly_images: int = test_anomaly_images
         self.train_images: int = train_images
         self.captures: List = []
         self.load_camera_config()
         self.load_camera_mapping()
+
+        # Default list
         self.camera_angles: List = [
             "cam_0_left",
             "cam_1_right",
@@ -50,9 +50,8 @@ class CameraManager:
             "cam_9_top_left",
             "cam_10_top_right",
         ]
-        self.sort_camera_angles()
 
-        # Initialize cameras
+        self.sort_camera_angles()
 
     def initialize_cameras(self) -> None:
         """
@@ -249,14 +248,10 @@ class CameraManager:
 
     def run(self) -> None:
         """
-        Main function to run the camera capturing process.
-
         This method is the main function to run the camera capturing process. It prompts the user to adjust the object before capturing.
 
         :raises: TODO Add exceptions.
 
-        Example:
-            run()
         """
         print(self.warehouse.anomalies)
 
@@ -275,6 +270,8 @@ class CameraManager:
             )  # Use the cleaned name
             self.capture_multiple_images(anomaly_folder, self.test_anomaly_images)
             logging.info(f"Captured images for anomaly: {anomaly}")
+
+        print("Done.")
 
 
 if __name__ == "__main__":
