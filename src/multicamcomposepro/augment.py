@@ -5,6 +5,11 @@ import random
 import cv2
 import numpy as np
 
+def allowed_file(filename, allowed_extensions=("png", "jpg", "jpeg")):
+    if "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in allowed_extensions
 
 class DataAugmenter:
     def __init__(
@@ -28,8 +33,17 @@ class DataAugmenter:
                 level=logging.DEBUG,
                 format="%(asctime)s - %(levelname)s - %(message)s",
             )
+    
+    def process_image(self, img, filename, output_subdir):
+        if not allowed_file(filename):
+            logging.error(f"File type not allowed for {filename}")
+            return
 
     def process_image(self, img, filename, output_subdir):
+        if not allowed_file(filename):
+            logging.error(f"File type not allowed for {filename}")
+            return
+
         self.resolution = img.shape[
             :2
         ]  # Always sets resolution to the last image processed
@@ -38,6 +52,7 @@ class DataAugmenter:
         if img is None:
             logging.error(f"Image is None for {filename}")
             return
+
         print(filename)
         for i in range(self.num_augmented_images):
             logging.info(f"Augmenting {filename}. Iteration: {i}")
