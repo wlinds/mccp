@@ -1,13 +1,12 @@
 # To run manually
-# Unix systems: run from root with python3 -m tests.test_camera
+# Unix systems: run from root with python3 -m pytest tests/test_camera.py
 # For Windows: $ python -m pytest tests/test_camera.py
 
 from unittest.mock import Mock, mock_open, patch
 
 import pytest
 
-from src.multicamcomposepro.camera import \
-    CameraManager  # TODO Needs to be fixed. Cant
+from src.multicamcomposepro.camera import CameraManager
 from src.multicamcomposepro.utils import Warehouse
 
 

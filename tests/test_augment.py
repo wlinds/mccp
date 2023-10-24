@@ -1,5 +1,5 @@
 # To test manually:
-# Unix systems: run from root with python3 -m tests.test_augment
+# Unix systems: run from root with python3 -m pytest tests/test_augment.py
 # For Windows: $ python -m pytest tests/test_augment.py
 
 import logging

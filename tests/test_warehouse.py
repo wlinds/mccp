@@ -1,5 +1,5 @@
-# To manually test, run from root with python3 -m tests.test_warehouse
-# For Windows: $ python -m pytest  tests/test_warehouse.py
+# To manually test, run from root with python3 -m pytest tests/test_warehouse.py
+# For Windows: $ python -m pytest tests/test_warehouse.py
 from unittest.mock import patch
 
 import pytest
