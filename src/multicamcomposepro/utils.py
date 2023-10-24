@@ -6,6 +6,8 @@ from typing import List, Optional, Union
 
 import cv2
 import numpy as np
+from PIL import Image
+from tqdm import tqdm
 
 # Camera Text Overlay #
 
@@ -409,3 +411,66 @@ class Warehouse:
                 f"Directory {self.object_name} already exist! Nothing has been created."
             )
         return ret
+
+
+def allowed_file(filename, allowed_extensions=("png", "jpg", "jpeg")):
+    if "." not in filename:
+        return False
+    ext = filename.rsplit(".", 1)[1].lower()
+    return ext in allowed_extensions
+
+
+def batch_resize(
+    root_input_dir, root_output_dir, target_size=(224, 224), overwrite_original=False
+):
+    n = 0
+    for dirpath, dirnames, filenames in os.walk(root_input_dir):
+        relative_dir = os.path.relpath(dirpath, root_input_dir)
+
+        if not any(allowed_file(filename) for filename in filenames):
+            continue
+
+        output_subdir = os.path.join(root_output_dir, relative_dir)
+        os.makedirs(output_subdir, exist_ok=True)
+
+        for filename in tqdm(filenames, desc=f"Processing image"):
+            if not allowed_file(filename):
+                tqdm.write(f"File type not allowed for {filename}")
+                continue
+
+            input_path = os.path.join(dirpath, filename)
+            output_path = os.path.join(output_subdir, filename)
+
+            if os.path.exists(output_path) and not overwrite_original:
+                tqdm.write(
+                    f"Skipping {filename} as it already exists in the output directory."
+                )
+                continue
+
+            # Crop horizontally in center of image #TODO crop horizontal if horizontal maybe
+            with Image.open(input_path) as img:
+                width, height = img.size
+                if width > height:
+                    left = (width - height) // 2
+                    right = width - left
+                    img = img.crop((left, 0, right, height))
+                elif height > width:
+                    upper = (height - width) // 2
+                    lower = height - upper
+                    img = img.crop((0, upper, width, lower))
+                img_resized = img.resize(target_size)
+                img_resized.save(output_path)
+
+            if overwrite_original:
+                os.remove(input_path)
+
+            n += 1
+
+    print(f"Finished resize of {n} images with new resolution: {target_size}")
+
+
+if __name__ == "__main__":
+    batch_resize(
+        "/Users/helvetica/_master_anodet/anodet/data_warehouse/dataset",
+        "/Users/helvetica/_master_anodet/anodet/data_warehouse/new",
+    )
