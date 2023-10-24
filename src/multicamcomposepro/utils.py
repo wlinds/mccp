@@ -118,7 +118,6 @@ class CameraConfigurator:
     """
 
     def __init__(self, device_id: int = 0) -> None:
-        print("Initializing CameraConfigurator...")
         self.captureDevice = wcap(device_id)
         self.device_id = device_id
         self.exposure: int = 0
@@ -126,14 +125,12 @@ class CameraConfigurator:
         self.init_camera_settings()
 
     def init_camera_settings(self) -> None:
-        print("Running CameraConfigurator...")
         self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
         self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
 
     def camera_text_overlay(self, frame: np.ndarray) -> None:
-        print("Running camera text overlay...")
         font, font_scale = cv2.FONT_HERSHEY_SIMPLEX, 1
         font_color, line_type = (255, 255, 255), 2
         position_exposure = (10, frame.shape[0] - 40)
@@ -160,6 +157,7 @@ class CameraConfigurator:
         )
 
     def update_camera_settings(self, key: int) -> None:
+        print("Keybind Adjust Exposure: [1/2] Color temp: [4/5] Continue: Q")
         if key == ord("2"):
             self.exposure += 1
             self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
@@ -186,25 +184,12 @@ class CameraConfigurator:
         with open(filename, "w") as f:
             json.dump(data, f)
 
-    def run(self) -> None:
-        print("running again. the actual run function. running run function. ")
-        while self.captureDevice.isOpened():
-            ret, frame = self.captureDevice.read()
-            key = cv2.waitKey(1)
-
-            self.update_camera_settings(key)
-            self.camera_text_overlay(frame)
-
-            cv2.imshow(f"mccp.CameraConfigurator | {cv2.__version__=})", frame)
-
-            if key == ord("q"):
-                break
-
-        self.captureDevice.release()
-        cv2.destroyAllWindows()
-
-    def camera_configurator(self) -> None:
-        print("Running CameraConfigurator... FUNCTION")
+    def run(self, path="camera_config.json") -> None:
+        if not os.path.exists(path):
+            print(f"{path} not found. Try running CameraIdentifier first or ", end="")
+            new_path = input("enter path for camera_config.json: ")
+            self.run(path=new_path)
+            return
 
         with open("camera_config.json", "r") as f:
             data = json.load(f)
@@ -217,7 +202,20 @@ class CameraConfigurator:
                 '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
             )
 
-        self.run()
+        while self.captureDevice.isOpened():
+            ret, frame = self.captureDevice.read()
+            key = cv2.waitKey(1)
+
+            self.update_camera_settings(key)
+            self.camera_text_overlay(frame)
+
+            cv2.imshow(f"mccp.CameraConfigurator | {cv2.__version__=}) ", frame)
+
+            if key == ord("q"):
+                break
+
+        self.captureDevice.release()
+        cv2.destroyAllWindows()
         self.save_to_json()
 
 
@@ -361,16 +359,3 @@ def batch_resize(
             n += 1
 
     print(f"Finished resize of {n} images with new resolution: {target_size}")
-
-
-if __name__ == "__main__":
-    w = Warehouse()
-    w.build()
-    c = CameraIdentifier()
-    conf = CameraConfigurator()
-    conf.camera_configurator()
-
-    # batch_resize(
-    #     "/Users/helvetica/_master_anodet/anodet/data_warehouse/dataset",
-    #     "/Users/helvetica/_master_anodet/anodet/data_warehouse/new",
-    # )
