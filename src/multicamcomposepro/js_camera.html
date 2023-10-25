@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <body>
+    <video id="videoElement" width="320" height="240" autoplay></video>
+
+    <script>
+      async function startCamera(deviceId) {
+        try {
+          const constraints = {
+            video: { deviceId: { exact: deviceId } }
+          };
+          const stream = await navigator.mediaDevices.getUserMedia(constraints);
+          const videoElement = document.getElementById('videoElement');
+          videoElement.srcObject = stream;
+        } catch (error) {
+          console.error('Error accessing the camera:', error);
+        }
+      }
+
+      // list of available media devices
+      async function getConnectedDevices() {
+        try {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+
+          // camera index
+          const selectedDeviceId = videoDevices[1].deviceId;
+          startCamera(selectedDeviceId);
+        } catch (error) {
+          console.error('Error enumerating devices:', error);
+        }
+      }
+
+      getConnectedDevices();
+    </script>
+  </body>
+</html>
