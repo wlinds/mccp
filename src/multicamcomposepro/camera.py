@@ -14,10 +14,10 @@ os_name = system()
 
 class CameraManager:
     """
-    Simultaneous capture of train and test images, including anomalies.
+    Simultaneous capture train and test images.
 
-    :param warehouse: Warehouse object containing object and anomaly information. This object guides the image capturing process.
-    :param test_anomaly_images: Number of test anomaly images to capture. If set to 5, it means 5 test anomaly images will be captured.
+    :param warehouse: Warehouse object with directory structure.
+    :param test_anomaly_images: Number of test anomaly images to capture.
     :param train_images: Number of training images to capture.
 
     :raises: TODO Add exceptions.
@@ -134,7 +134,7 @@ class CameraManager:
                 else:
                     sorted_angles[index] = self.camera_angles[int(identifier)]
             self.camera_angles = sorted_angles
-            print("Sorted Camera Angles:", self.camera_angles)  # Debugging line
+            print("Debug: Sorted Camera Angles:", self.camera_angles)
 
     def capture_multiple_images(
         self, folder_path: str, num_pictures_to_take: int
