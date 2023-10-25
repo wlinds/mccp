@@ -17,7 +17,7 @@ class DataAugmenter:
         logging_enabled=True,
     ):
         self.object_dir = os.path.join(
-            os.getcwd(), "data_warehouse", "dataset", object_name, "train", "good"
+            os.getcwd(), "data_warehouse", "dataset", object_name.replace(" ", "_"), "train", "good"
         )
         self.num_augmented_images = num_augmented_images
         self.temperature = temperature
