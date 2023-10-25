@@ -9,6 +9,19 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+def test_camera(i=0):
+    cap = wcap(i)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 12)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 7)
+    while True:
+        ret, frame = cap.read()
+        cv2.imshow(f"mccp.test_camera | {cv2.__version__=} camera_{i} ", frame)
+        key = cv2.waitKey(1) & 0xFF
+        print(frame)
+        if key == ord("q"):
+            cap.release()
+            cv2.destroyAllWindows()
+
 # Use CAP_DSHOW on Windows
 def wcap(i=None):
     if system() != "Windows":
@@ -359,3 +372,6 @@ def batch_resize(
             n += 1
 
     print(f"Finished resize of {n} images with new resolution: {target_size}")
+
+if __name__ == "__main__":
+    print(type(test_camera(0)))
