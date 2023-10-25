@@ -170,7 +170,6 @@ class CameraConfigurator:
         )
 
     def update_camera_settings(self, key: int) -> None:
-        print("Keybind Adjust Exposure: [1/2] Color temp: [4/5] Continue: Q")
         if key == ord("2"):
             self.exposure += 1
             self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
@@ -214,7 +213,7 @@ class CameraConfigurator:
             print(
                 '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
             )
-
+        print(f"Keybind Adjusts:\n\nExposure keys: [1/2]\nColor temp keys: [4/5]\nContinue: Q")
         while self.captureDevice.isOpened():
             ret, frame = self.captureDevice.read()
             key = cv2.waitKey(1)
@@ -299,22 +298,40 @@ class Warehouse:
                 nested_sub_dir_path = os.path.join(sub_dir_path, nested_sub_dir)
                 self.create_directory(nested_sub_dir_path)
 
+    # def __str__(self) -> str:
+    #     ret = ""
+    #     if self.created_dirs:
+    #         ret += f"Created the following directories: {', '.join(self.created_dirs)} in {self.object_name} \n"
+    #     if self.created_sub_dirs:
+    #         ret += f"Created the following subdirectories for object {self.object_name}: {', '.join(self.created_sub_dirs)}"
+    #     if self.created_nested_sub_dirs:
+    #         ret += (
+    #             f"With nested subdirectories: {', '.join(self.created_nested_sub_dirs)}"
+    #         )
+    #     elif not any(
+    #         [self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]
+    #     ):
+    #         ret += (
+    #             f"Directory {self.object_name} already exist! Nothing has been created."
+    #         )
+    #     return ret
+
     def __str__(self) -> str:
         ret = ""
         if self.created_dirs:
-            ret += f"Created the following directories: {', '.join(self.created_dirs)} in {self.object_name} \n"
+            ret += f"Created the following directories in {self.object_name}:\n"
+            for directory in self.created_dirs:
+                ret += f" - {directory}\n"
         if self.created_sub_dirs:
-            ret += f"Created the following subdirectories for object {self.object_name}: {', '.join(self.created_sub_dirs)}"
+            ret += f"Created the following subdirectories for object {self.object_name}:\n"
+            for sub_directory in self.created_sub_dirs:
+                ret += f" - {sub_directory}\n"
         if self.created_nested_sub_dirs:
-            ret += (
-                f"With nested subdirectories: {', '.join(self.created_nested_sub_dirs)}"
-            )
-        elif not any(
-            [self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]
-        ):
-            ret += (
-                f"Directory {self.object_name} already exist! Nothing has been created."
-            )
+            ret += f"With nested subdirectories for object {self.object_name}:\n"
+            for nested_sub_directory in self.created_nested_sub_dirs:
+                ret += f" - {nested_sub_directory}\n"
+        if not any([self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]):
+            ret += f"Directory {self.object_name} already exists! Nothing has been created."
         return ret
 
 
@@ -374,4 +391,6 @@ def batch_resize(
     print(f"Finished resize of {n} images with new resolution: {target_size}")
 
 if __name__ == "__main__":
-    print(type(test_camera(0)))
+    w = Warehouse()
+    w.build("asdf", ["asdasdd", "ssffdfa"])
+    print(w)
