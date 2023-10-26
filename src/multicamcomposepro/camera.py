@@ -34,107 +34,40 @@ class CameraManager:
         self.train_images: int = train_images
         self.captures: List = []
         self.load_camera_config()
-        self.load_camera_mapping()
-
-        # Default list
-        self.camera_angles: List = [
-            "cam_0_left",
-            "cam_1_right",
-            "cam_2_front",
-            "cam_3_front_left",
-            "cam_4_front_right",
-            "cam_5_back",
-            "cam_6_back_left",
-            "cam_7_back_right",
-            "cam_8_top",
-            "cam_9_top_left",
-            "cam_10_top_right",
-        ]
-
         self.sort_camera_angles()
 
     def initialize_cameras(self) -> None:
-        """
-        Initialize the camera settings and configurations.
-
-        This method sets up the camera configurations based on the operating system
-        and pre-defined settings. It should be called before capturing any images.
-
-        :raises: TODO Add exceptions.
-        """
         self.captures = []
-        for cam_idx in range(self.num_cameras):
+        for camera in self.camera_config:
+            cam_idx = camera["Camera"]
             print(f"Camera {cam_idx} initializing...")
             cap = wcap(cam_idx)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
-            cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-            cap.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
+            if isinstance(camera["Resolution"], str): # if the resolution is a string with format "width x height"
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(camera["Resolution"].split(' x ')[0]))
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(camera["Resolution"].split(' x ')[1]))
+            else: # if the resolution is a touple / list with format [width, height]
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera["Resolution"][0])
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera["Resolution"][1])
+            cap.set(cv2.CAP_PROP_EXPOSURE, camera["Camera Exposure"])
+            cap.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, camera["Camera Color Temperature"])
             self.captures.append(cap)
+
+    def load_camera_config(self, filename: str = "camera_config.json") -> None:
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                self.camera_config = json.load(f)
+        else:
+            logging.warning(f"{filename} not found! Using default camera settings.")
+
+    def sort_camera_angles(self) -> None:
+        self.camera_angles = [camera["Angle"] for camera in self.camera_config]
+        print("Debug: Sorted Camera Angles:", self.camera_angles)
+
 
     def __del__(self) -> None:
         for cap in self.captures:
             cap.release()
 
-    def load_camera_config(self, filename: str = "camera_config.json") -> None:
-        """
-        Load camera configurations from a JSON file.
-
-        This method reads camera settings like exposure and color temperature from a JSON file.
-
-        :param filename: Name of the JSON file containing camera configurations.
-
-        :raises FileNotFoundError: If the specified JSON file is not found.
-
-        Example:
-            load_camera_config("custom_camera_config.json")
-        """
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-                camera_settings = data.get("CameraSettings", {})
-                self.exposure = camera_settings.get("Camera Exposure", 0)
-                self.color_temp = camera_settings.get("Camera Color Temperature", 0)
-                self.num_cameras = len(data.get("Camera Order", {}))
-        else:
-            logging.warning(f"{filename} not found! Using default camera settings.")
-
-    def load_camera_mapping(self, filename: str = "camera_config.json") -> None:
-        """ """
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-                self.camera_mapping = data.get("Camera Order", {})
-        else:
-            logging.warning(
-                "camera_config.json not found! Please run camera_identifier.py first."
-            )
-
-    def sort_camera_angles(self) -> None:
-        """
-        Sort camera angles based on the loaded camera mapping.
-
-        This method sorts the camera angles based on the camera mapping loaded from the JSON file.
-
-        :raises: TODO Add exceptions.
-
-        Example:
-            sort_camera_angles()
-
-        """
-        if hasattr(self, "camera_mapping"):
-            sorted_angles = [None] * len(self.camera_angles)
-            for identifier, index in self.camera_mapping.items():
-                if identifier == "skip":
-                    if isinstance(index, list):
-                        for i in index:
-                            sorted_angles[i] = "skip"
-                    else:
-                        sorted_angles[index] = "skip"
-                else:
-                    sorted_angles[index] = self.camera_angles[int(identifier)]
-            self.camera_angles = sorted_angles
-            print("Debug: Sorted Camera Angles:", self.camera_angles)
 
     def capture_multiple_images(
         self, folder_path: str, num_pictures_to_take: int

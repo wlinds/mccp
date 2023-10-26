@@ -21,7 +21,7 @@ def test_camera(i=0):
         if key == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
-
+VALID_ANGLES = ["Left", "Right", "Front", "Back", "Top", "Bottom", "Front-Left", "Front-Right", "Back-Left", "Back-Right"]
 # Use CAP_DSHOW on Windows
 def wcap(i=None):
     if system() != "Windows":
@@ -63,6 +63,7 @@ class CameraIdentifier:
         self.save_to_json()
 
     def identify_all_cameras(self) -> None:
+        angle_idx = 0
         """
         Allows the user to enter a unique identifier for each camera connected to the computer.
         :raises cv2.error: If the video capture device cannot be opened.
@@ -70,8 +71,18 @@ class CameraIdentifier:
 
         # Check all connectiond to find all camera streams
         for i in range(self.max_usb_connection):
+            camera_id = None
             if not wcap(i).isOpened():
                 self.max_usb_connection -= 1
+            if angle_idx < len(VALID_ANGLES):
+                angle = VALID_ANGLES[angle_idx]
+                self.camera_mapping[angle] = i
+                angle_idx += 1
+            else:
+                print("Warning: More cameras than valid angles provided. Some angles might be duplicated.")
+                angle = VALID_ANGLES[angle_idx % len(VALID_ANGLES)]
+                self.camera_mapping[angle] = i
+                angle_idx += 1
 
         # Iterate over all accessible cameras, create threads for inputs
         for i in range(self.max_usb_connection):
@@ -108,12 +119,17 @@ class CameraIdentifier:
                 self.camera_mapping[camera_id] = i
 
     def save_to_json(self, filename: str = "camera_config.json") -> None:
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-        else:
-            data = {}
-        data["Camera Order"] = self.camera_mapping
+        data = []
+        for camera_id, cam_idx in self.camera_mapping.items():
+            if camera_id != "skip":
+                data.append({
+                    "Camera": cam_idx,
+                    "Resolution": "1920 x 1440",  # default value; modify as necessary
+                    "Angle": camera_id,
+                    "Camera Exposure": 0,  # default value; modify as necessary
+                    "Camera Color Temperature": 3000,  # default value
+                    "Mask": 0  # default value; modify as necessary
+                })
         with open(filename, "w") as f:
             json.dump(data, f)
         print("Camera Order saved.")
@@ -184,15 +200,26 @@ class CameraConfigurator:
             self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
 
     def save_to_json(self, filename: str = "camera_config.json"):
+        data = []
         if os.path.exists(filename):
             with open(filename, "r") as f:
                 data = json.load(f)
+        for entry in data:
+            if entry["Camera"] == self.device_id:
+                entry["Camera Exposure"] = self.exposure
+                entry["Camera Color Temperature"] = self.color_temp
+                break
         else:
-            data = {}
-        data["CameraSettings"] = {
-            "Camera Exposure": self.exposure,
-            "Camera Color Temperature": self.color_temp,
-        }
+            # Append new camera entry if not found
+            data.append({
+                "Camera": self.device_id,
+                "Resolution": "1920 x 1440",  # default value; modify as necessary
+                "Angle": "Unknown",  # default value; modify as necessary
+                "Camera Exposure": self.exposure,
+                "Camera Color Temperature": self.color_temp,
+                "Mask": 0  # default value; modify as necessary
+            })
+
         with open(filename, "w") as f:
             json.dump(data, f)
 
@@ -203,16 +230,18 @@ class CameraConfigurator:
             self.run(path=new_path)
             return
 
-        with open("camera_config.json", "r") as f:
+        with open(path, "r") as f:
             data = json.load(f)
-            camera_settings = data.get("CameraSettings", {})
-        if (
-            "Camera Exposure" not in camera_settings
-            or "Camera Color Temperature" not in camera_settings
-        ):
-            print(
-                '"Camera Exposure" or "Camera Color Temperature" not found in camera_config.json. Running CameraConfigurator...'
-            )
+
+        # Find the current camera's settings in the list
+        current_camera_settings = next((cam for cam in data if cam["Camera"] == self.device_id), None)
+
+        if current_camera_settings:
+            self.exposure = current_camera_settings["Camera Exposure"]
+            self.color_temp = current_camera_settings["Camera Color Temperature"]
+        else:
+            print("Settings for the current camera not found. Using defaults.")
+
         print(f"Keybind Adjusts:\n\nExposure keys: [1/2]\nColor temp keys: [4/5]\nContinue: Q")
         while self.captureDevice.isOpened():
             ret, frame = self.captureDevice.read()
@@ -261,77 +290,46 @@ class Warehouse:
             except Exception as e:
                 print(f"An error occurred while creating {path}: {e}")
 
-    def build(
-        self,
-        object_name: str = "default2_object",
-        anomalies: Optional[List[str]] = ["Default1", "Default2", "Default3"],
-    ):
-        """
-        Build the data warehouse directory structure based on the given object name and anomalies.
-
-        Parameters:
-            object_name (str): The name of the object directory.
-            anomalies (List[str]): A list of anomaly names for nested subdirectories.
-        """
+    def build(self, object_name: str = "default2_object", anomalies: Optional[List[str]] = ["Anomaly1", "Anomaly2", "Anomaly3"]):
         self.object_name = self.clean_folder_name(object_name)
         base_dir_path = os.path.join(os.getcwd(), "data_warehouse")
         dataset_dir_path = os.path.join(base_dir_path, "dataset")
         object_dir_path = os.path.join(dataset_dir_path, self.object_name)
 
-        for path in [base_dir_path, dataset_dir_path]:
+        for path in [base_dir_path, dataset_dir_path, object_dir_path]:
             self.create_directory(path)
 
-        self.create_directory(object_dir_path)
-
-        self.anomalies = (
-            anomalies  # populates the anomalies list so that camera.py can use it
-        )
-        sub_dirs = ["train", "test"]
+        self.anomalies = anomalies
+        sub_dirs = ["test", "train"]  # Changed the order to have 'test' first
         nested_sub_dirs = {"train": ["good"], "test": ["good"] + anomalies}
 
         for sub_dir in sub_dirs:
             sub_dir_path = os.path.join(object_dir_path, sub_dir)
             self.create_directory(sub_dir_path)
+            if sub_dir not in self.created_sub_dirs:
+                self.created_sub_dirs.append(sub_dir)
 
-            for nested_sub_dir in nested_sub_dirs.get(sub_dir, []):
+            for nested_sub_dir in nested_sub_dirs[sub_dir]:
                 nested_sub_dir = self.clean_folder_name(nested_sub_dir)
                 nested_sub_dir_path = os.path.join(sub_dir_path, nested_sub_dir)
                 self.create_directory(nested_sub_dir_path)
-
-    # def __str__(self) -> str:
-    #     ret = ""
-    #     if self.created_dirs:
-    #         ret += f"Created the following directories: {', '.join(self.created_dirs)} in {self.object_name} \n"
-    #     if self.created_sub_dirs:
-    #         ret += f"Created the following subdirectories for object {self.object_name}: {', '.join(self.created_sub_dirs)}"
-    #     if self.created_nested_sub_dirs:
-    #         ret += (
-    #             f"With nested subdirectories: {', '.join(self.created_nested_sub_dirs)}"
-    #         )
-    #     elif not any(
-    #         [self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]
-    #     ):
-    #         ret += (
-    #             f"Directory {self.object_name} already exist! Nothing has been created."
-    #         )
-    #     return ret
+                if nested_sub_dir not in self.created_nested_sub_dirs:
+                    self.created_nested_sub_dirs.append(nested_sub_dir)
 
     def __str__(self) -> str:
-        ret = ""
-        if self.created_dirs:
-            ret += f"Created the following directories in {self.object_name}:\n"
-            for directory in self.created_dirs:
-                ret += f" - {directory}\n"
-        if self.created_sub_dirs:
-            ret += f"Created the following subdirectories for object {self.object_name}:\n"
-            for sub_directory in self.created_sub_dirs:
-                ret += f" - {sub_directory}\n"
-        if self.created_nested_sub_dirs:
-            ret += f"With nested subdirectories for object {self.object_name}:\n"
-            for nested_sub_directory in self.created_nested_sub_dirs:
-                ret += f" - {nested_sub_directory}\n"
-        if not any([self.created_dirs, self.created_sub_dirs, self.created_nested_sub_dirs]):
-            ret += f"Directory {self.object_name} already exists! Nothing has been created."
+        ret = self.object_name + "\n"
+        
+        nested_sub_dirs = {"train": ["good"], "test": ["good"] + self.anomalies}  # Define this within the method
+        
+        for i, sub_dir in enumerate(self.created_sub_dirs):
+            prefix = " ┗" if i == len(self.created_sub_dirs) - 1 else " ┣"
+            ret += f"{prefix} {sub_dir}\n"
+            
+            nested_dirs = nested_sub_dirs[sub_dir]
+            for j, nested_sub_directory in enumerate(nested_dirs):
+                nested_prefix = " ┃ ┗" if j == len(nested_dirs) - 1 else " ┃ ┣"
+                ret += f"{nested_prefix} {nested_sub_directory}\n"
+
         return ret
 
 
@@ -392,5 +390,5 @@ def batch_resize(
 
 if __name__ == "__main__":
     w = Warehouse()
-    w.build("asdf", ["asdasdd", "ssffdfa"])
+    w.build("Object", ["Anomaly1", "Anomaly2", "Anomaly3"])
     print(w)
