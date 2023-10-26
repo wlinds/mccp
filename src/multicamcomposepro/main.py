@@ -2,7 +2,7 @@ from augment import DataAugmenter
 from camera import CameraManager
 from utils import CameraConfigurator, CameraIdentifier, Warehouse
 
-object_name = "aug_test2"
+object_name = "test again"
 anomalies = ["cracked screen", "discolored front"]
 
 def main():

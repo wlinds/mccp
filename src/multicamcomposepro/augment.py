@@ -36,11 +36,6 @@ class DataAugmenter:
             logging.error(f"File type not allowed for {filename}")
             return
 
-    def process_image(self, img, filename, output_subdir):
-        if not allowed_file(filename):
-            logging.error(f"File type not allowed for {filename}")
-            return
-
         self.resolution = img.shape[
             :2
         ]  # Always sets resolution to the last image processed
@@ -71,6 +66,9 @@ class DataAugmenter:
 
             img, val = self.random_gaussian_blur(img)
             logging.info(f"Iter. {i}: {filename} - Blur rad: {val}")
+            
+            img = self.random_pixel_dropout(img)
+
 
             output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
             output_path = os.path.join(output_subdir, output_file)
@@ -204,6 +202,43 @@ class DataAugmenter:
     def random_texture_overlay(self, img):
         # TODO
         return img
+    def random_pixel_dropout(self, img):
+        """
+        Randomly sets a percentage of the image's pixels to black based on temperature.
+        
+        Parameters:
+            img (np.array): The input image.
+
+        Returns:
+            np.array: The image with random pixels set to black.
+        """
+
+        # Adjust dropout percentage based on temperature
+        # For example, let's assume temperature ranges from 0 to 1.
+        # You can adjust the range and logic as needed.
+        dropout_percentage = (self.temperature * 0.0001)  # Here, 0.01 is the base dropout and we adjust it by temperature up to 11%.
+
+        # Calculate the number of pixels to drop
+        total_pixels = img.shape[0] * img.shape[1]
+        num_pixels_to_drop = int(min(dropout_percentage * total_pixels, total_pixels))
+                    
+        # Create a mask of the same size as the image, filled with False
+        dropout_mask = np.full(img.shape[:2], False)
+
+        # Randomly select pixels to drop
+        dropout_coords = np.random.choice(total_pixels, num_pixels_to_drop, replace=False)
+        
+        # Convert the 1D indices to 2D coordinates
+        dropout_coords_2d = np.unravel_index(dropout_coords, img.shape[:2])
+        
+        # Set the chosen pixels to True in the mask
+        dropout_mask[dropout_coords_2d] = True
+
+        # Set the chosen pixels to black in the image
+        img[dropout_mask] = [0, 0, 0]  # [R, G, B]
+
+        return img
+
 
         # Remove augmented images from the chosen dataset
 
@@ -232,6 +267,6 @@ class DataAugmenter:
 
 
 if __name__ == "__main__":
-    augmenter = DataAugmenter(object_name="o_b_j_e_ct", temperature=0.5)
+    augmenter = DataAugmenter(object_name="aug_test", temperature=0.01)
     augmenter.augment_images()
     # DataAugmenter.remove_augmented_files("o_b_j_e_ct")
