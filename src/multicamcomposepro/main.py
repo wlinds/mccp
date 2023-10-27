@@ -1,9 +1,10 @@
 from augment import DataAugmenter
 from camera import CameraManager
-from utils import CameraConfigurator, CameraIdentifier, Warehouse
+from utils import CameraConfigurator, Warehouse
 
-object_name = "test again222222"
+object_name = "iphone_6"
 anomalies = ["cracked screen", "discolored front"]
+
 
 def main():
     # Create a structured data warehouse
@@ -11,17 +12,16 @@ def main():
     warehouse.build(object_name, anomalies)
     print(warehouse)
     # Find all connected cameras
-    CameraIdentifier()
-    
     # Configure all found cameras
-    CameraConfigurator().run()
+    CameraConfigurator()
 
     camera_manager = CameraManager(warehouse, 2, 3)
     camera_manager.run()
     print(warehouse)
 
-    augmenter = DataAugmenter(object_name, temperature=10, logging_enabled=False)
+    augmenter = DataAugmenter(object_name, temperature=0.05, logging_enabled=False)
     augmenter.augment_images()  # Pass selected_images if needed
+
 
 if __name__ == "__main__":
     main()

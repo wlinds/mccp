@@ -2,11 +2,11 @@ import json
 import logging
 import os
 from platform import system
+from time import sleep
 from typing import List
 
 import cv2
-
-from utils import Warehouse, CameraIdentifier, wcap
+from utils import CameraConfigurator, Warehouse, wcap
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
@@ -21,11 +21,12 @@ class CameraManager:
     :param train_images: Number of training images to capture.
 
     :raises: TODO Add exceptions.
-    
+
     Example:
         warehouse = Warehouse()
         camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
     """
+
     def __init__(
         self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10
     ) -> None:
@@ -42,14 +43,22 @@ class CameraManager:
             cam_idx = camera["Camera"]
             print(f"Camera {cam_idx} initializing...")
             cap = wcap(cam_idx)
-            if isinstance(camera["Resolution"], str): # if the resolution is a string with format "width x height"
-                cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(camera["Resolution"].split(' x ')[0]))
-                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(camera["Resolution"].split(' x ')[1]))
-            else: # if the resolution is a touple / list with format [width, height]
+            if isinstance(
+                camera["Resolution"], str
+            ):  # if the resolution is a string with format "width x height"
+                cap.set(
+                    cv2.CAP_PROP_FRAME_WIDTH, int(camera["Resolution"].split(" x ")[0])
+                )
+                cap.set(
+                    cv2.CAP_PROP_FRAME_HEIGHT, int(camera["Resolution"].split(" x ")[1])
+                )
+            else:  # if the resolution is a touple / list with format [width, height]
                 cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera["Resolution"][0])
                 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera["Resolution"][1])
             cap.set(cv2.CAP_PROP_EXPOSURE, camera["Camera Exposure"])
-            cap.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, camera["Camera Color Temperature"])
+            cap.set(
+                cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, camera["Camera Color Temperature"]
+            )
             self.captures.append(cap)
 
     def load_camera_config(self, filename: str = "camera_config.json") -> None:
@@ -63,11 +72,9 @@ class CameraManager:
         self.camera_angles = [camera["Angle"] for camera in self.camera_config]
         print("Debug: Sorted Camera Angles:", self.camera_angles)
 
-
     def __del__(self) -> None:
         for cap in self.captures:
             cap.release()
-
 
     def capture_multiple_images(
         self, folder_path: str, num_pictures_to_take: int
@@ -211,6 +218,6 @@ if __name__ == "__main__":
     warehouse = Warehouse()
     warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
 
-    CameraIdentifier()
+    CameraConfigurator()
     camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()

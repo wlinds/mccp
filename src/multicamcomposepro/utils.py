@@ -1,13 +1,14 @@
 import json
 import os
-from platform import system
 import threading
+from platform import system
 from typing import List, Optional, Union
 
 import cv2
 import numpy as np
 from PIL import Image
 from tqdm import tqdm
+
 
 def test_camera(i=0):
     cap = wcap(i)
@@ -21,7 +22,8 @@ def test_camera(i=0):
         if key == ord("q"):
             cap.release()
             cv2.destroyAllWindows()
-VALID_ANGLES = ["Left", "Right", "Front", "Back", "Top", "Bottom", "Front-Left", "Front-Right", "Back-Left", "Back-Right"]
+
+
 # Use CAP_DSHOW on Windows
 def wcap(i=None):
     if system() != "Windows":
@@ -29,23 +31,27 @@ def wcap(i=None):
     else:
         return cv2.VideoCapture(i, cv2.CAP_DSHOW)
 
-class CameraIdentifier:
-    """
-    Opens Cameras one by one and asks the user to identify them.
-    Saves camera order with unique identifiers to camera_config.json.
-    Order is used in CameraManager to display the camera streams in the correct order.
-    """
 
+VALID_ANGLES = [
+    "Left",
+    "Right",
+    "Front",
+    "Back",
+    "Top",
+    "Bottom",
+    "Front-Left",
+    "Front-Right",
+    "Back-Left",
+    "Back-Right",
+]
+VALID_RESOLUTIONS = ["400 x 400", "640 x 480", "800 x 640", "800 x 800"]
+
+
+class CameraConfigurator:
     def __init__(self, n_cameras: int = 10):
-        """
-        Initialize CameraIdentifier object.
-
-        :ivar camera_mapping: A dictionary containing the camera order with unique identifiers.
-
-        You can change max_tested value to increase/decrease the number of cameras that can be connected to the computer.
-        """
-        self.camera_mapping: dict = {}
         self.max_usb_connection: int = n_cameras
+        self.camera_mapping: dict = {}
+        self.camera_settings: dict = {}
         self.init()
 
     def init(self):
@@ -53,211 +59,91 @@ class CameraIdentifier:
             reconfigure = input(
                 "Do you want to reconfigure existing camera config? [Y/N] "
             )
-            if reconfigure.lower() != "y" and reconfigure.lower() != "yes":
-                print("CameraIdentifier cancelled.")
+            if reconfigure.lower() not in ["y", "yes"]:
+                print("CameraManager cancelled.")
                 return
-            else:
-                pass
-        print("Running CameraIdentifier...")
-        self.identify_all_cameras()
+        print("Running CameraManager...")
+        self.identify_and_configure_all_cameras()
         self.save_to_json()
 
-    def identify_all_cameras(self) -> None:
-        angle_idx = 0
-        """
-        Allows the user to enter a unique identifier for each camera connected to the computer.
-        :raises cv2.error: If the video capture device cannot be opened.
-        """
-
-        # Check all connectiond to find all camera streams
+    def identify_and_configure_all_cameras(self) -> None:
+        # Iterate over all accessible cameras
         for i in range(self.max_usb_connection):
-            camera_id = None
-            if not wcap(i).isOpened():
-                self.max_usb_connection -= 1
-            if angle_idx < len(VALID_ANGLES):
-                angle = VALID_ANGLES[angle_idx]
-                self.camera_mapping[angle] = i
-                angle_idx += 1
-            else:
-                print("Warning: More cameras than valid angles provided. Some angles might be duplicated.")
-                angle = VALID_ANGLES[angle_idx % len(VALID_ANGLES)]
-                self.camera_mapping[angle] = i
-                angle_idx += 1
+            cap = wcap(i)  # Create a new capture object for each camera
+            if not cap.isOpened():
+                continue
 
-        # Iterate over all accessible cameras, create threads for inputs
-        for i in range(self.max_usb_connection):
-            camera_id = None
-            cap = wcap(i)
-
-            def user_input_thread():
-                nonlocal camera_id
-                while camera_id is None:
-                    camera_id = input(f"Enter camera_id for camera at index {i}: ")
-
-            input_thread = threading.Thread(target=user_input_thread)
-            input_thread.start()
-
-            while camera_id is None:
+            # Display the camera stream
+            while True:
                 ret, frame = cap.read()
-                cv2.imshow(
-                    f"mccp.CameraIdentifier | {cv2.__version__=} camera_{i} ", frame
-                )
+                cv2.imshow(f"mccp.CameraManager | camera_{i}", frame)
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord("q"):
                     break
 
+            # Close the camera stream display
             cap.release()
             cv2.destroyAllWindows()
-            input_thread.join()
 
-            if camera_id.lower() == "skip":
-                if "skip" in self.camera_mapping:
-                    self.camera_mapping["skip"].append(i)
-                else:
-                    self.camera_mapping["skip"] = [i]
-            else:
-                self.camera_mapping[camera_id] = i
+            # Ask the user for the angle or to skip
+            print("Available angles:", ", ".join(VALID_ANGLES))
+            camera_angle = input(
+                f"Enter camera angle (or 'skip') for camera at index {i}: "
+            )
+
+            if camera_angle.lower() == "skip":
+                continue
+            elif camera_angle not in VALID_ANGLES:
+                print(f"Invalid angle '{camera_angle}'! Skipping this camera.")
+                continue
+
+            # Ask for exposure and color temperature
+            exposure = int(
+                input(f"Enter exposure (default 0) for camera at index {i}: ") or 0
+            )
+            color_temp = int(
+                input(
+                    f"Enter color temperature (default 3000) for camera at index {i}: "
+                )
+                or 3000
+            )
+
+            # Ask for resolution
+            print("Available resolutions:", ", ".join(VALID_RESOLUTIONS))
+            resolution = input(
+                f"Enter resolution (or 'default') for camera at index {i}: "
+            )
+            if resolution.lower() == "default" or resolution not in VALID_RESOLUTIONS:
+                resolution = "400 x 400"  # default value
+
+            # Store the settings
+            self.camera_settings[i] = {
+                "Angle": camera_angle,
+                "Resolution": resolution,
+                "Camera Exposure": exposure,
+                "Camera Color Temperature": color_temp,
+            }
 
     def save_to_json(self, filename: str = "camera_config.json") -> None:
         data = []
-        for camera_id, cam_idx in self.camera_mapping.items():
-            if camera_id != "skip":
-                data.append({
+        for cam_idx, settings in self.camera_settings.items():
+            data.append(
+                {
                     "Camera": cam_idx,
-                    "Resolution": "1920 x 1440",  # default value; modify as necessary
-                    "Angle": camera_id,
-                    "Camera Exposure": 0,  # default value; modify as necessary
-                    "Camera Color Temperature": 3000,  # default value
-                    "Mask": 0  # default value; modify as necessary
-                })
+                    "Resolution": settings["Resolution"],
+                    "Angle": settings["Angle"],
+                    "Camera Exposure": settings["Camera Exposure"],
+                    "Camera Color Temperature": settings["Camera Color Temperature"],
+                    "Mask": 0,  # default value; modify as necessary
+                }
+            )
         with open(filename, "w") as f:
-            json.dump(data, f)
-        print("Camera Order saved.")
-    
+            json.dump(data, f, indent=4)
+        print("Camera settings saved.")
 
 
-# Camera Configurator #
-
-
-class CameraConfigurator:
-    """
-    Utility Class for configuring camera exposure and color temperature.
-    Sets exposure and color temperature to 0 and 3000 respectively by default.
-    If another value is chosen during the setup it will be saved to all connected cameras.
-    """
-
-    def __init__(self, device_id: int = 0) -> None:
-        self.captureDevice = wcap(device_id)
-        self.device_id = device_id
-        self.exposure: int = 0
-        self.color_temp: int = 3000
-        self.init_camera_settings()
-
-    def init_camera_settings(self) -> None:
-        self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-        self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
-        self.captureDevice.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-        self.captureDevice.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
-
-    def camera_text_overlay(self, frame: np.ndarray) -> None:
-        font, font_scale = cv2.FONT_HERSHEY_SIMPLEX, 1
-        font_color, line_type = (255, 255, 255), 2
-        position_exposure = (10, frame.shape[0] - 40)
-        position_color_temp = (10, position_exposure[1] - 40)
-
-        cv2.putText(
-            frame,
-            f"Exposure: {self.exposure}",
-            position_exposure,
-            font,
-            font_scale,
-            font_color,
-            line_type,
-        )
-
-        cv2.putText(
-            frame,
-            f"Color Temp: {self.color_temp}",
-            position_color_temp,
-            font,
-            font_scale,
-            font_color,
-            line_type,
-        )
-
-    def update_camera_settings(self, key: int) -> None:
-        if key == ord("2"):
-            self.exposure += 1
-            self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-        elif key == ord("1"):
-            self.exposure -= 1
-            self.captureDevice.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-        elif key == ord("5"):
-            self.color_temp += 50
-            self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
-        elif key == ord("4"):
-            self.color_temp -= 50
-            self.captureDevice.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
-
-    def save_to_json(self, filename: str = "camera_config.json"):
-        data = []
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-        for entry in data:
-            if entry["Camera"] == self.device_id:
-                entry["Camera Exposure"] = self.exposure
-                entry["Camera Color Temperature"] = self.color_temp
-                break
-        else:
-            # Append new camera entry if not found
-            data.append({
-                "Camera": self.device_id,
-                "Resolution": "1920 x 1440",  # default value; modify as necessary
-                "Angle": "Unknown",  # default value; modify as necessary
-                "Camera Exposure": self.exposure,
-                "Camera Color Temperature": self.color_temp,
-                "Mask": 0  # default value; modify as necessary
-            })
-
-        with open(filename, "w") as f:
-            json.dump(data, f)
-
-    def run(self, path="camera_config.json") -> None:
-        if not os.path.exists(path):
-            print(f"{path} not found. Try running CameraIdentifier first or ", end="")
-            new_path = input("enter path for camera_config.json: ")
-            self.run(path=new_path)
-            return
-
-        with open(path, "r") as f:
-            data = json.load(f)
-
-        # Find the current camera's settings in the list
-        current_camera_settings = next((cam for cam in data if cam["Camera"] == self.device_id), None)
-
-        if current_camera_settings:
-            self.exposure = current_camera_settings["Camera Exposure"]
-            self.color_temp = current_camera_settings["Camera Color Temperature"]
-        else:
-            print("Settings for the current camera not found. Using defaults.")
-
-        print(f"Keybind Adjusts:\n\nExposure keys: [1/2]\nColor temp keys: [4/5]\nContinue: Q")
-        while self.captureDevice.isOpened():
-            ret, frame = self.captureDevice.read()
-            key = cv2.waitKey(1)
-
-            self.update_camera_settings(key)
-            self.camera_text_overlay(frame)
-
-            cv2.imshow(f"mccp.CameraConfigurator | {cv2.__version__=}) ", frame)
-
-            if key == ord("q"):
-                break
-
-        self.captureDevice.release()
-        cv2.destroyAllWindows()
-        self.save_to_json()
+if __name__ == "__main__":
+    cc = CameraConfigurator()
 
 
 class Warehouse:
@@ -290,7 +176,11 @@ class Warehouse:
             except Exception as e:
                 print(f"An error occurred while creating {path}: {e}")
 
-    def build(self, object_name: str = "default2_object", anomalies: Optional[List[str]] = ["Anomaly1", "Anomaly2", "Anomaly3"]):
+    def build(
+        self,
+        object_name: str = "default2_object",
+        anomalies: Optional[List[str]] = ["Anomaly1", "Anomaly2", "Anomaly3"],
+    ):
         self.object_name = self.clean_folder_name(object_name)
         base_dir_path = os.path.join(os.getcwd(), "data_warehouse")
         dataset_dir_path = os.path.join(base_dir_path, "dataset")
@@ -318,13 +208,16 @@ class Warehouse:
 
     def __str__(self) -> str:
         ret = self.object_name + "\n"
-        
-        nested_sub_dirs = {"train": ["good"], "test": ["good"] + self.anomalies}  # Define this within the method
-        
+
+        nested_sub_dirs = {
+            "train": ["good"],
+            "test": ["good"] + self.anomalies,
+        }  # Define this within the method
+
         for i, sub_dir in enumerate(self.created_sub_dirs):
             prefix = " ┗" if i == len(self.created_sub_dirs) - 1 else " ┣"
             ret += f"{prefix} {sub_dir}\n"
-            
+
             nested_dirs = nested_sub_dirs[sub_dir]
             for j, nested_sub_directory in enumerate(nested_dirs):
                 nested_prefix = " ┃ ┗" if j == len(nested_dirs) - 1 else " ┃ ┣"
@@ -387,6 +280,7 @@ def batch_resize(
             n += 1
 
     print(f"Finished resize of {n} images with new resolution: {target_size}")
+
 
 if __name__ == "__main__":
     w = Warehouse()

@@ -4,7 +4,6 @@ import random
 
 import cv2
 import numpy as np
-
 from utils import allowed_file
 
 
@@ -17,7 +16,12 @@ class DataAugmenter:
         logging_enabled=True,
     ):
         self.object_dir = os.path.join(
-            os.getcwd(), "data_warehouse", "dataset", object_name.replace(" ", "_"), "train", "good"
+            os.getcwd(),
+            "data_warehouse",
+            "dataset",
+            object_name.replace(" ", "_"),
+            "train",
+            "good",
         )
         self.num_augmented_images = num_augmented_images
         self.temperature = temperature
@@ -58,17 +62,17 @@ class DataAugmenter:
             img, val = self.random_rotation(img)
             logging.info(f"Iter. {i}: {filename} - Rotation: {val}")
 
-            img, val = self.random_mirror(img)
-            logging.info(f"Iter. {i}: {filename} - Mirrored: {val}")
+            # For mirroring. Too large of an augmentation for most objects.
+            # img, val = self.random_mirror(img)
+            # logging.info(f"Iter. {i}: {filename} - Mirrored: {val}")
 
             img, val = self.random_lens_distortion(img, filename)
             logging.info(f"Iter. {i}: {filename} - Perspect: {val}")
 
             img, val = self.random_gaussian_blur(img)
             logging.info(f"Iter. {i}: {filename} - Blur rad: {val}")
-            
-            img = self.random_pixel_dropout(img)
 
+            img = self.random_pixel_dropout(img)
 
             output_file = os.path.splitext(filename)[0] + f"_aug_{i}.png"
             output_path = os.path.join(output_subdir, output_file)
@@ -202,10 +206,11 @@ class DataAugmenter:
     def random_texture_overlay(self, img):
         # TODO
         return img
+
     def random_pixel_dropout(self, img):
         """
         Randomly sets a percentage of the image's pixels to black based on temperature.
-        
+
         Parameters:
             img (np.array): The input image.
 
@@ -216,21 +221,25 @@ class DataAugmenter:
         # Adjust dropout percentage based on temperature
         # For example, let's assume temperature ranges from 0 to 1.
         # You can adjust the range and logic as needed.
-        dropout_percentage = (self.temperature * 0.0001)  # Here, 0.01 is the base dropout and we adjust it by temperature up to 11%.
+        dropout_percentage = (
+            self.temperature * 0.0001
+        )  # Here, 0.01 is the base dropout and we adjust it by temperature up to 11%.
 
         # Calculate the number of pixels to drop
         total_pixels = img.shape[0] * img.shape[1]
         num_pixels_to_drop = int(min(dropout_percentage * total_pixels, total_pixels))
-                    
+
         # Create a mask of the same size as the image, filled with False
         dropout_mask = np.full(img.shape[:2], False)
 
         # Randomly select pixels to drop
-        dropout_coords = np.random.choice(total_pixels, num_pixels_to_drop, replace=False)
-        
+        dropout_coords = np.random.choice(
+            total_pixels, num_pixels_to_drop, replace=False
+        )
+
         # Convert the 1D indices to 2D coordinates
         dropout_coords_2d = np.unravel_index(dropout_coords, img.shape[:2])
-        
+
         # Set the chosen pixels to True in the mask
         dropout_mask[dropout_coords_2d] = True
 
@@ -238,7 +247,6 @@ class DataAugmenter:
         img[dropout_mask] = [0, 0, 0]  # [R, G, B]
 
         return img
-
 
         # Remove augmented images from the chosen dataset
 
