@@ -34,22 +34,16 @@ def test_initialization(camera_manager, mock_warehouse):
 def test_load_camera_config(
     mock_json_load, mock_file_open, mock_exists, camera_manager
 ):
-    mock_json_load.return_value = {
-        "CameraSettings": {"Camera Exposure": 1, "Camera Color Temperature": 2},
-        "Camera Order": {"0": 0, "1": 1},
-    }
-    camera_manager.load_camera_config()
-    assert camera_manager.exposure == 1
-    assert camera_manager.color_temp == 2
-    assert camera_manager.num_cameras == 2
-
-
-# Test 3: Test Camera Angle Sorting
-def test_sort_camera_angles(camera_manager):
-    camera_manager.camera_angles = [
-        "cam_0_left",
-        "cam_1_right",
+    mock_json_load.return_value = [
+        {
+            "Camera": 2,
+            "Resolution": "400 x 400",
+            "Angle": "Right",
+            "Camera Exposure": -5,
+            "Camera Color Temperature": 3500,
+            "Mask": 0,
+        }
     ]
-    camera_manager.camera_mapping = {"0": 0, "1": 1}
-    camera_manager.sort_camera_angles()
-    assert camera_manager.camera_angles[0] == "cam_0_left"
+    camera_manager.load_camera_config()
+    assert camera_manager.camera_config[0]["Camera Exposure"] == -5
+    assert camera_manager.camera_config[0]["Camera Color Temperature"] == 3500

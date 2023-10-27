@@ -1,6 +1,6 @@
-from augment import DataAugmenter
-from camera import CameraManager
-from utils import CameraConfigurator, Warehouse
+from .augment import DataAugmenter
+from .camera import CameraManager
+from .utils import CameraConfigurator, Warehouse
 
 object_name = "iphone_6"
 anomalies = ["cracked screen", "discolored front"]

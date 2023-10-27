@@ -4,7 +4,7 @@ import random
 
 import cv2
 import numpy as np
-from utils import allowed_file
+from .utils import allowed_file
 
 
 class DataAugmenter:
