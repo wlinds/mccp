@@ -52,52 +52,47 @@ class CameraConfigurator:
         self.max_usb_connection: int = n_cameras
         self.camera_mapping: dict = {}
         self.camera_settings: dict = {}
-        self.init()
-
-    def init(self):
-        if os.path.exists("camera_config.json"):
-            reconfigure = input(
-                "Do you want to reconfigure existing camera config? [Y/N] "
-            )
-            if reconfigure.lower() not in ["y", "yes"]:
-                print("CameraManager cancelled.")
-                return
-        print("Running CameraManager...")
-        self.identify_and_configure_all_cameras()
+        self.init()        
         self.save_to_json()
 
-    def identify_and_configure_all_cameras(self) -> None:
-        # Iterate over all accessible cameras
+    def stream_camera(self, i):
+        cap = wcap(i)
+        while not self.stop_camera_stream:
+            ret, frame = cap.read()
+            cv2.imshow(f"mccp.CameraManager | camera_{i}", frame)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord("q"):
+                break
+        cap.release()
+        cv2.destroyAllWindows()
+
+    def init(self):  # This method was previously named "identify_and_configure_all_cameras"
         for i in range(self.max_usb_connection):
-            cap = wcap(i)  # Create a new capture object for each camera
+            cap = wcap(i)
             if not cap.isOpened():
                 continue
 
-            # Display the camera stream
-            while True:
-                ret, frame = cap.read()
-                cv2.imshow(f"mccp.CameraManager | camera_{i}", frame)
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord("q"):
-                    break
+            self.stop_camera_stream = False
+            camera_thread = threading.Thread(target=self.stream_camera, args=(i,))
+            camera_thread.start()
 
-            # Close the camera stream display
-            cap.release()
-            cv2.destroyAllWindows()
+            # Now we'll collect user inputs while the camera stream is running
 
-            # Ask the user for the angle or to skip
             print("Available angles:", ", ".join(VALID_ANGLES))
             camera_angle = input(
                 f"Enter camera angle (or 'skip') for camera at index {i}: "
             )
 
             if camera_angle.lower() == "skip":
+                self.stop_camera_stream = True
+                camera_thread.join()
                 continue
             elif camera_angle not in VALID_ANGLES:
                 print(f"Invalid angle '{camera_angle}'! Skipping this camera.")
+                self.stop_camera_stream = True
+                camera_thread.join()
                 continue
 
-            # Ask for exposure and color temperature
             exposure = int(
                 input(f"Enter exposure (default 0) for camera at index {i}: ") or 0
             )
@@ -108,21 +103,23 @@ class CameraConfigurator:
                 or 3000
             )
 
-            # Ask for resolution
             print("Available resolutions:", ", ".join(VALID_RESOLUTIONS))
             resolution = input(
                 f"Enter resolution (or 'default') for camera at index {i}: "
             )
             if resolution.lower() == "default" or resolution not in VALID_RESOLUTIONS:
-                resolution = "400 x 400"  # default value
+                resolution = "400 x 400"
 
-            # Store the settings
             self.camera_settings[i] = {
                 "Angle": camera_angle,
                 "Resolution": resolution,
                 "Camera Exposure": exposure,
                 "Camera Color Temperature": color_temp,
             }
+
+            # Stop the camera stream and wait for the thread to finish
+            self.stop_camera_stream = True
+            camera_thread.join()
 
     def save_to_json(self, filename: str = "camera_config.json") -> None:
         data = []

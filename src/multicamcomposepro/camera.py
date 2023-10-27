@@ -6,6 +6,7 @@ from time import sleep
 from typing import List
 
 import cv2
+
 from .utils import CameraConfigurator, Warehouse, wcap
 
 logging.basicConfig(level=logging.INFO)

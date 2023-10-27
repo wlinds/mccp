@@ -2,7 +2,7 @@ from .augment import DataAugmenter
 from .camera import CameraManager
 from .utils import CameraConfigurator, Warehouse
 
-object_name = "iphone_6"
+object_name = "iphone_232232"
 anomalies = ["cracked screen", "discolored front"]
 
 
