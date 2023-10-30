@@ -1,6 +1,6 @@
-from augment import DataAugmenter
-from camera import CameraManager
-from utils import CameraConfigurator, Warehouse
+from .augment import DataAugmenter
+from .camera import CameraManager
+from .utils import CameraConfigurator, Warehouse
 
 object_name = "5324146"
 anomalies = ["cracked screen", "discolored front"]
