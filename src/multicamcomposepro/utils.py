@@ -10,8 +10,8 @@ from PIL import Image
 from tqdm import tqdm
 
 
-def test_camera(i=0):
-    cap = wcap(i)
+def view_camera(camera_index=0):
+    cap = wcap(camera_index)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 12)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 7)
     while True:

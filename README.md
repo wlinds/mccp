@@ -1,17 +1,20 @@
 
-# MultiCamComposePro - Manage multiple cameras using Python
+# MultiCamComposePro - Manage multiple cameras in Python
 ## MCCP
 
 ## Overview
 
 - This project aims to capture images of objects from multiple camera angles and detect anomalies. It uses OpenCV for image capturing and provides a modular approach to manage camera configurations and image storage.
-Requirements
+
+
+
+### Requirements
 
     - Python 3.10
     - OpenCV
     - JSON for configuration
 
-## Installation
+### Installation
 
 1. Install package:
 
@@ -32,34 +35,48 @@ Run the main.py script to start the application:
 ### camera.py
 
     Class: CameraManager
-        Manages multiple cameras and captures images.
-        Loads camera configurations from a JSON file.
-        Sorts camera angles based on the configuration.
+        Manage and capture images.
+        Load camera configurations from JSON file.
+        Sort and display camera angles based on configuration.
 
 ### main.py
 
     Function: main()
-        Orchestrates the camera identification, configuration, and image capturing process.
+        Run camera identification, configuration, and image capturing process.
 
-utils.py
+### augment.py
+    Class: DataAugmenter
+        Create synthetic data from captured images.
+
+### utils.py
 
     Class: Warehouse
-        Manages object names and their anomalies.
-    Class: CameraIdentifier
-        Identifies and configures cameras.
-    Class: CameraConfigurator
-        Additional camera setup.
-    Class: DataAugmenter
-        Creates synthetic images based on images captured for training.
+        Manage object names and setup directories.
 
-Configuration
+    Class: CameraConfigurator
+        Find and configure all connected cameras.
+        Configure exposure and white balance.
+
+    Function: batch_resize()
+        Post-capture resize.
+
+    Function: wcap():
+        Allow optimized image capture on Windows OS.
+
+    Function: view_camera()
+        View camera feed for any connected camera.
+
+
+### Configuration
 
     camera_config.json: Holds the camera settings and order.
 
-TODO
+### Contributing
 
-    Make a modular grid of camera streams, i.e., not only a row but columns as well.
+Information on how to contribute available [here.](https://github.com/wlinds/mccp/blob/main/CONTRIBUTING.md)
 
-License
+
+
+### License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
