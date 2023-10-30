@@ -3,9 +3,9 @@ name = "mccp"
 version = "0.1.4"
 
 authors = [
-  "wlinds <w.lindstedt@gmail.com>",
-  "Rufshod <alexander@11a.se>"
-  ]
+    { name = "wlinds", email = "w.lindstedt@gmail.com" },
+    { name = "Rufshod", email = "alexander@11a.se" }
+]
 
 description = "A Python package designed for capturing images from multiple cameras simultaneously. MCCP simplifies the process of data collection for machine learning models and setting up computer vision applications."
 
