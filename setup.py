@@ -12,8 +12,8 @@ setup_requirements = [
 ]
 
 setup(
-    author="Alexander & William",
-    author_email="alexander@11a.se",
+    author="Alexander, William",
+    author_email="alexander@11a.se, w.lindstedt@gmail.com",
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 3 - Alpha",
