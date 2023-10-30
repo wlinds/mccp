@@ -83,32 +83,28 @@ class CameraConfigurator:
                 if key == ord("q"):
                     break
                 elif key == ord("c"):  # Press 'c' to configure the camera
-                    # Pause feed to gather configurations
-                    # cv2.imshow(
-                    #     f"mccp.CameraIdentifier | {cv2.__version__=} camera_{i} - PAUSED FOR CONFIGURATION", 
-                    #     frame
-                    # )
+
                     cv2.waitKey(1)
 
                     # Ask the user for the angle or to skip
                     print("Available angles:", ", ".join(VALID_ANGLES))
                     camera_angle = input(
-                        f"Enter camera angle (or 'skip') for camera at {i}: "
-                    )
+                        f"Enter camera angle (or 'skip') for camera at index {i}: "
+                    ).lower()
 
-                    if camera_angle.lower() == "skip":
+                    if camera_angle == "skip":
                         continue
-                    elif camera_angle not in VALID_ANGLES:
+                    elif camera_angle not in [angle.lower() for angle in VALID_ANGLES]:
                         print(f"Invalid angle '{camera_angle}'! Skipping this camera.")
                         continue
 
-                    # Ask for exposure and color temperature
-                    exposure = int(
-                        input(f"Enter exposure (default 0) for camera {i}: ") or 0
+                    # Ask for exposure and color temperature TODO: Fix error handling
+                    exposure = int( 
+                        input(f"Enter exposure (default 0) for camera at index {i}: ") or 0
                     )
                     color_temp = int(
                         input(
-                            f"Enter color temperature (default 3000) for camera {i}: "
+                            f"Enter color temperature (default 3000) for camera at index {i}: "
                         )
                         or 3000
                     )
@@ -117,17 +113,24 @@ class CameraConfigurator:
                     print("Available resolutions:", ", ".join(VALID_RESOLUTIONS))
                     resolution = input(
                         f"Enter resolution (or 'default') for camera at index {i}: "
-                    )
-                    if resolution.lower() == "default" or resolution not in VALID_RESOLUTIONS:
+                    ).lower()
+
+                    # Convert VALID_RESOLUTIONS to lowercase for comparison
+                    lower_valid_resolutions = [res.lower() for res in VALID_RESOLUTIONS]
+                    
+                    if resolution == "default" or resolution not in lower_valid_resolutions:
                         resolution = "400 x 400"  # default value
 
                     # Store the settings
                     self.camera_settings[i] = {
-                        "Angle": camera_angle,
+                        "Angle": camera_angle.capitalize(),
                         "Resolution": resolution,
                         "Camera Exposure": exposure,
                         "Camera Color Temperature": color_temp,
                     }
+
+                    # Break out of the camera stream loop after configuration
+                    break
 
             cap.release()
             cv2.destroyAllWindows()
