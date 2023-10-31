@@ -8,6 +8,7 @@ from utils import wcap, VALID_ANGLES, VALID_RESOLUTIONS
 
 # This is running very slow (??) tbh not sure why
 # Might run better with CAP_DSHOW on windows
+# Update: it does run way better on windows with DSHOW
 
 
 def save_settings(caps, settings):
@@ -131,5 +132,5 @@ def camera_wizard(*camera_indices):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    camera_wizard(0, 1) 
+    camera_wizard(0, 1, 2, 3) 
 
