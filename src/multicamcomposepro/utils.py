@@ -16,7 +16,7 @@ def view_camera(camera_index=0):
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 7)
     while True:
         ret, frame = cap.read()
-        cv2.imshow(f"mccp.test_camera | {cv2.__version__=} camera_{i} ", frame)
+        cv2.imshow(f"mccp.test_camera | {cv2.__version__=} camera_{camera_index} ", frame)
         key = cv2.waitKey(1) & 0xFF
         print(frame)
         if key == ord("q"):
@@ -152,10 +152,6 @@ class CameraConfigurator:
         with open(filename, "w") as f:
             json.dump(data, f, indent=4)
         print("Camera settings saved.")
-
-
-if __name__ == "__main__":
-    cc = CameraConfigurator()
 
 
 class Warehouse:
@@ -295,6 +291,8 @@ def batch_resize(
 
 
 if __name__ == "__main__":
+    view_camera(0)
+    
     w = Warehouse()
     w.build("Object", ["Anomaly1", "Anomaly2", "Anomaly3"])
     print(w)
