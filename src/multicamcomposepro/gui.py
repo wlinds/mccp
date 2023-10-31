@@ -6,25 +6,41 @@ import threading
 
 from utils import wcap, VALID_ANGLES, VALID_RESOLUTIONS
 
-# This is running very slow (??) tbh not sure why
-# Might run better with CAP_DSHOW on windows
-# Update: it does run way better on windows with DSHOW
-
+# Spaghetti code not sure if we keep this - also performance issues without DSHOW on Windows
 
 def save_settings(caps, settings):
     with open('settings.json', 'w') as file:
         json.dump(settings, file, indent=4)
 
-def display_video_feed(label, cap):
+
+# For a video stream/feed
+def display_video_feed(label, cap, camera_index):
     ret, frame = cap.read()
     if ret:
         frame = cv2.resize(frame, (320, 240), interpolation=cv2.INTER_AREA)
         cv2image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        img = Image.fromarray(cv2image)
-        imgtk = ImageTk.PhotoImage(image=img)
-        label.imgtk = imgtk
-        label.config(image=imgtk)
-        label.after(10, display_video_feed, label, cap)
+    else:
+        frame = cv2.imread(f'camera_{camera_index}_frame.jpg')
+        if frame is None:
+            return
+        cv2image = cv2.resize(frame, (320, 240), interpolation=cv2.INTER_AREA)
+        cv2image = cv2.cvtColor(cv2image, cv2.COLOR_BGR2RGB)
+
+    img = Image.fromarray(cv2image)
+    imgtk = ImageTk.PhotoImage(image=img)
+    label.imgtk = imgtk
+    label.config(image=imgtk)
+    label.after(10, display_video_feed, label, cap, camera_index)
+
+
+
+# For capturing a single image
+def capture_single_frame(cap, camera_index):
+    ret, frame = cap.read()
+    if ret:
+        cv2.imwrite(f'camera_{camera_index}_frame.jpg', frame)
+        print(f"Frame captured for camera {camera_index}")
+
 
 # Trying to improve performance
 def threaded_display(label, cap):
@@ -32,7 +48,7 @@ def threaded_display(label, cap):
     thread.daemon = 1
     thread.start()
 
-def camera_wizard(*camera_indices):
+def camera_wizard(*camera_indices, video_stream = False):
     root = tk.Tk()
     root.title("MCCP 0.1.4 - Camera Wizard")
 
@@ -61,6 +77,17 @@ def camera_wizard(*camera_indices):
         cap.set(cv2.CAP_PROP_FRAME_WIDTH, 12)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 7)
         caps.append(cap)
+
+        def capture_wrapper(cap, idx):
+            return lambda: capture_single_frame(cap, idx)
+
+        capture_button = tk.Button(root, text="Capture Frame", command=capture_wrapper(caps[idx], camera_index))
+        capture_button.grid(row=11, column=idx)
+
+        # Display captured image
+        video_label = tk.Label(root)
+        video_label.grid(row=1, column=idx)
+        display_video_feed(video_label, caps[idx], camera_index)
 
         # Camera name (index)
         label = tk.Label(root, text=f"Camera {camera_index}")
@@ -132,5 +159,4 @@ def camera_wizard(*camera_indices):
     cv2.destroyAllWindows()
 
 if __name__ == "__main__":
-    camera_wizard(0, 1, 2, 3) 
-
+    camera_wizard(0, 1, 2, 3)
