@@ -29,11 +29,12 @@ class CameraManager:
     """
 
     def __init__(
-        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10
+        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10, allow_user_input: bool = True
     ) -> None:
         self.warehouse: Warehouse = warehouse
         self.test_anomaly_images: int = test_anomaly_images
         self.train_images: int = train_images
+        self.allow_user_input: bool = allow_user_input
         self.captures: List = []
         self.load_camera_config()
         self.sort_camera_angles()
@@ -100,7 +101,10 @@ class CameraManager:
         image_counter = 0
         for _ in range(num_pictures_to_take):
             # Pause here to allow for object adjustment
-            input("Press Enter to continue capturing after adjusting the object...")
+            if self.allow_user_input == True:
+                input("Press Enter to continue capturing after adjusting the object...")
+            else:
+                print("Continuing without user input...\nCapturing the object...")
             for cam_idx, angle in enumerate(self.camera_angles):
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
@@ -122,18 +126,26 @@ class CameraManager:
 
         if self.train_images != 0:
             folder_type = "train"
-            input(
-                f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
-            )
+            if self.allow_user_input == True:
+                input(
+                    f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
+                )
+            else:
+                print(f"Continuing without user input...\nCapturing TRAINING images for {self.warehouse.object_name} in {folder_type}:")
+
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.train_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
 
         if self.test_anomaly_images != 0:
             folder_type = "test"
-            input(
-                f"Press Enter to capture images for good object in {folder_type} folder:"
-            )
+            if self.allow_user_input == True:
+                input(
+                    f"Press Enter to capture images for good object in {folder_type} folder:"
+                )
+            else:
+                print(f"Continuing without user input...\nCapturing images for good object in {folder_type} folder:")
+
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.test_anomaly_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
@@ -202,7 +214,10 @@ class CameraManager:
             os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
         )
         for anomaly in self.warehouse.anomalies:
-            input(f"Press Enter to capture images for anomaly: {anomaly}")
+            if self.allow_user_input == True:
+                input(f"Press Enter to capture images for anomaly: {anomaly}")
+            else:
+                print(f"Continuing without user input...\nCapturing images for anomaly: {anomaly}")
             cleaned_anomaly = self.warehouse.clean_folder_name(
                 anomaly
             )  # Clean the anomaly name

@@ -2,7 +2,7 @@ from .augment import DataAugmenter
 from .camera import CameraManager
 from .utils import CameraConfigurator, Warehouse
 
-object_name = "5324146"
+object_name = "test_object_without_input"
 anomalies = ["cracked screen", "discolored front"]
 
 
@@ -11,11 +11,10 @@ def main():
     warehouse = Warehouse()
     warehouse.build(object_name, anomalies)
     print(warehouse)
-    # Find all connected cameras
     # Configure all found cameras
     CameraConfigurator()
 
-    camera_manager = CameraManager(warehouse, 2, 3)
+    camera_manager = CameraManager(warehouse, 2, 3, allow_user_input=True)
     camera_manager.run()
     print(warehouse)
 
