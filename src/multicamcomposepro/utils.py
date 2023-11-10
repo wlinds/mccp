@@ -83,7 +83,6 @@ class CameraConfigurator:
                 if key == ord("q"):
                     break
                 elif key == ord("c"):  # Press 'c' to configure the camera
-
                     cv2.waitKey(1)
 
                     # Ask the user for the angle or to skip
@@ -99,8 +98,9 @@ class CameraConfigurator:
                         continue
 
                     # Ask for exposure and color temperature TODO: Fix error handling
-                    exposure = int( 
-                        input(f"Enter exposure (default 0) for camera at index {i}: ") or 0
+                    exposure = int(
+                        input(f"Enter exposure (default 0) for camera at index {i}: ")
+                        or 0
                     )
                     color_temp = int(
                         input(
@@ -117,8 +117,11 @@ class CameraConfigurator:
 
                     # Convert VALID_RESOLUTIONS to lowercase for comparison
                     lower_valid_resolutions = [res.lower() for res in VALID_RESOLUTIONS]
-                    
-                    if resolution == "default" or resolution not in lower_valid_resolutions:
+
+                    if (
+                        resolution == "default"
+                        or resolution not in lower_valid_resolutions
+                    ):
                         resolution = "400 x 400"  # default value
 
                     # Store the settings
@@ -134,7 +137,6 @@ class CameraConfigurator:
 
             cap.release()
             cv2.destroyAllWindows()
-
 
     def save_to_json(self, filename: str = "camera_config.json") -> None:
         data = []

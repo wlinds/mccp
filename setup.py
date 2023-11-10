@@ -12,8 +12,8 @@ setup_requirements = [
 ]
 
 setup(
-    author="Alexander & William",
-    author_email="alexander@11a.se",
+    author="Alexander, William",
+    author_email="alexander@11a.se, w.lindstedt@gmail.com",
     python_requires=">=3.6",
     classifiers=[
         "Development Status :: 3 - Alpha",
@@ -40,6 +40,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://www.github.com/wlinds/mccp",
-    version="0.1.1",
+    version="0.1.6",
     zip_safe=False,
 )
