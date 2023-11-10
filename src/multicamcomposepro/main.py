@@ -25,6 +25,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # Quickly capture an image through all cameras
-    mccp.qc()
