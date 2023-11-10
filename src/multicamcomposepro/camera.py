@@ -3,7 +3,7 @@ import logging
 import os
 from platform import system
 from time import sleep
-from typing import List
+from typing import List, Optional
 
 import cv2
 
@@ -151,7 +151,7 @@ class CameraManager:
             logging.info(f"Captured images for good object in {folder_type} folder.")
 
     def capture_single_image(
-        self, folder_path: str, cam_idx: int, angle: str, image_counter: int
+        self, folder_path: str, cam_idx: int, angle: str, image_counter: int, overwrite_original = True,
     ) -> None:
         """
         Capture a single image from a specific camera angle.
@@ -175,8 +175,8 @@ class CameraManager:
         angle_folder_path = os.path.join(folder_path, angle)
         os.makedirs(angle_folder_path, exist_ok=True)
 
-        # Use the pre-initialized capture object
-        cap = self.captures[cam_idx]
+        # Use the pre-initialized capture object, else use argument index
+        cap = self.captures[cam_idx] if self.captures else wcap(cam_idx)
 
         # Flush the buffer
         for _ in range(2):
@@ -195,9 +195,22 @@ class CameraManager:
             )
             return
 
-        filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
-        cv2.imwrite(filename, frame)
-        logging.info(f"Saved image {filename}")
+        if overwrite_original:
+            filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
+            cv2.imwrite(filename, frame)
+            logging.info(f"Saved image {filename}")
+
+        else:
+            # Terrible solution, but works..
+            i = 1
+            while True:
+                filename = os.path.join(angle_folder_path, f"{image_counter + i:03d}.png")
+                if not os.path.exists(filename):
+                    break
+                i += 1
+
+            cv2.imwrite(filename, frame)
+            logging.info(f"Saved image {filename}")
 
     def run(self) -> None:
         """
@@ -228,6 +241,31 @@ class CameraManager:
             logging.info(f"Captured images for anomaly: {anomaly}")
 
         print("Done.")
+
+
+class QuickCapture(CameraManager):
+    """Instantly capture images from all connected cameras
+
+    Args:
+        folder_path (str, optional): Defaults to current working directory.
+        folder_name (str, optional): Defaults to "MCCP_QC".
+        n_cameras (int, optional): Defaults to 5.
+
+    """
+    def __init__(self, folder_path: Optional[str] = None, folder_name: str = "MCCP_QC", n_cameras: int = 5) -> None:
+        super().__init__(allow_user_input = False, warehouse=None)
+
+        self.n_cameras = n_cameras
+        if folder_path is None:
+            self.folder_path = os.getcwd()
+        else:
+            self.folder_path = folder_path
+
+        self.capture()
+
+    def capture(self) -> None:
+        for i in range(self.n_cameras):
+            self.capture_single_image(folder_path=self.folder_path, cam_idx=i, angle="MCCP_QC", image_counter=1, overwrite_original=False)
 
 
 if __name__ == "__main__":

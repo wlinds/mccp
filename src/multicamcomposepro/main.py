@@ -1,6 +1,7 @@
 from .augment import DataAugmenter
 from .camera import CameraManager
 from .utils import CameraConfigurator, Warehouse
+from .utils import quickcap as qc
 
 object_name = "test_object_without_input"
 anomalies = ["cracked screen", "discolored front"]
@@ -24,3 +25,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # Quickly capture an image through all cameras
+    mccp.qc()
