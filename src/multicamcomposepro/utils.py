@@ -9,6 +9,23 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
+# For Canon compatibility (No SDK needed)
+import locale
+import gphoto2 as gp
+import logging
+
+def find_canon():
+    # This just finds the USB Connection TODO: convert to cap object
+    locale.setlocale(locale.LC_ALL, '')
+    logging.basicConfig(
+        format='%(levelname)s: %(name)s: %(message)s', level=logging.WARNING)
+    callback_obj = gp.check_result(gp.use_python_logging())
+    cameras = gp.Camera.autodetect()
+    for n, (name, value) in enumerate(cameras):
+        print('camera number', n)
+        print('===============')
+        print(name)
+        print(value)
 
 def view_camera(camera_index=0):
     cap = wcap(camera_index)
@@ -72,6 +89,8 @@ class CameraConfigurator:
             cap = wcap(i)  # Create a new capture object for each camera
             if not cap.isOpened():
                 continue
+
+        # Also find Canon here?? Maybe Nikon, Leica etc..
 
             while True:
                 ret, frame = cap.read()
@@ -293,8 +312,10 @@ def batch_resize(
 
 
 if __name__ == "__main__":
-    view_camera(0)
+
+    find_canon()
+    # view_camera(0)
     
-    w = Warehouse()
-    w.build("Object", ["Anomaly1", "Anomaly2", "Anomaly3"])
-    print(w)
+    # w = Warehouse()
+    # w.build("Object", ["Anomaly1", "Anomaly2", "Anomaly3"])
+    # print(w)
