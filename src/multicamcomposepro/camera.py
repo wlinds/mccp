@@ -3,7 +3,7 @@ import logging
 import os
 from platform import system
 from time import sleep
-from typing import List
+from typing import List, Optional
 
 import cv2
 
@@ -176,8 +176,8 @@ class CameraManager:
         angle_folder_path = os.path.join(folder_path, angle)
         os.makedirs(angle_folder_path, exist_ok=True)
 
-        # Use the pre-initialized capture object
-        cap = self.captures[cam_idx]
+        # Use the pre-initialized capture object, else use argument index
+        cap = self.captures[cam_idx] if self.captures else wcap(cam_idx)
 
         # Flush the buffer
         for _ in range(2):
@@ -252,3 +252,27 @@ if __name__ == "__main__":
     CameraConfigurator()
     camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()
+
+class QuickCapture(CameraManager):
+    """Instantly capture images from all connected cameras
+    Args:
+        folder_path (str, optional): Defaults to current working directory.
+        folder_name (str, optional): Defaults to "MCCP_QC".
+        n_cameras (int, optional): Defaults to 5.
+    """
+    def __init__(self, folder_path: Optional[str] = None, folder_name: str = "MCCP_QC", n_cameras: int = 5) -> None:
+        super().__init__(allow_user_input = False, warehouse=None)
+
+        self.n_cameras = n_cameras
+        if folder_path is None:
+            self.folder_path = os.getcwd()
+        else:
+            self.folder_path = folder_path
+
+        self.capture()
+
+    def capture(self) -> None:
+        for i in range(self.n_cameras):
+            self.capture_single_image(folder_path=self.folder_path, cam_idx=i, angle="MCCP_QC", image_counter=1, overwrite_original=False)
+
+
