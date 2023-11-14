@@ -2,144 +2,82 @@ import json
 import logging
 import os
 from platform import system
-from typing import Dict, List, Optional
+from time import sleep
+from typing import List
 
 import cv2
 
-from utils import Warehouse
+from .utils import CameraConfigurator, Warehouse, wcap
 
 logging.basicConfig(level=logging.INFO)
 os_name = system()
 
 
 class CameraManager:
+    """
+    Simultaneous capture train and test images.
+
+    :param warehouse: Warehouse object with directory structure.
+    :param test_anomaly_images: Number of test anomaly images to capture.
+    :param train_images: Number of training images to capture.
+
+    :raises: TODO Add exceptions.
+
+    Example:
+        warehouse = Warehouse()
+        camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
+    """
+
     def __init__(
-        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10
+        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10, allow_user_input: bool = True, overwrite_original: bool = True
     ) -> None:
-        """
-        Initialize the CameraManager object.
-
-        This method sets up the initial state of the CameraManager, including loading camera configurations and mappings.
-
-        :param warehouse: Warehouse object containing object and anomaly information. This object guides the image capturing process.
-        :param test_anomaly_images: Number of test anomaly images to capture. If set to 5, it means 5 test anomaly images will be captured.
-        :param train_images: Number of training images to capture.
-
-        :raises: TODO Add exceptions.
-
-        Example:
-            warehouse = Warehouse()
-            camera_manager = CameraManager(warehouse, test_anomaly_images=50, train_images=200)
-        """
         self.warehouse: Warehouse = warehouse
         self.test_anomaly_images: int = test_anomaly_images
         self.train_images: int = train_images
+        self.allow_user_input: bool = allow_user_input
+        self.overwrite_original: bool = overwrite_original
         self.captures: List = []
         self.load_camera_config()
-        self.load_camera_mapping()
-        self.camera_angles: List = [
-            "cam_0_left",
-            "cam_1_right",
-            "cam_2_front",
-            "cam_3_front_left",
-            "cam_4_front_right",
-            "cam_5_back",
-            "cam_6_back_left",
-            "cam_7_back_right",
-            "cam_8_top",
-            "cam_9_top_left",
-            "cam_10_top_right",
-        ]
         self.sort_camera_angles()
 
-        # Initialize cameras
-
     def initialize_cameras(self) -> None:
-        """
-        Initialize the camera settings and configurations.
-
-        This method sets up the camera configurations based on the operating system
-        and pre-defined settings. It should be called before capturing any images.
-
-        :raises: TODO Add exceptions.
-        """
         self.captures = []
-        for cam_idx in range(self.num_cameras):
-            print("image capture", cam_idx)
-            cap = (
-                cv2.VideoCapture(cam_idx, cv2.CAP_DSHOW)
-                if os_name == "Windows"
-                else cv2.VideoCapture(cam_idx)
+        for camera in self.camera_config:
+            cam_idx = camera["Camera"]
+            print(f"Camera {cam_idx} initializing...")
+            cap = wcap(cam_idx)
+            if isinstance(
+                camera["Resolution"], str
+            ):  # if the resolution is a string with format "width x height"
+                cap.set(
+                    cv2.CAP_PROP_FRAME_WIDTH, int(camera["Resolution"].split(" x ")[0])
+                )
+                cap.set(
+                    cv2.CAP_PROP_FRAME_HEIGHT, int(camera["Resolution"].split(" x ")[1])
+                )
+            else:  # if the resolution is a touple / list with format [width, height]
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera["Resolution"][0])
+                cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera["Resolution"][1])
+            cap.set(cv2.CAP_PROP_EXPOSURE, camera["Camera Exposure"])
+            cap.set(
+                cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, camera["Camera Color Temperature"]
             )
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
-            cap.set(cv2.CAP_PROP_EXPOSURE, self.exposure)
-            cap.set(cv2.CAP_PROP_WHITE_BALANCE_BLUE_U, self.color_temp)
             self.captures.append(cap)
+
+    def load_camera_config(self, filename: str = "camera_config.json") -> None:
+        if os.path.exists(filename):
+            with open(filename, "r") as f:
+                self.camera_config = json.load(f)
+        else:
+            logging.warning(f"{filename} not found! Using default camera settings.")
+
+    def sort_camera_angles(self) -> None:
+        self.camera_angles = [camera["Angle"] for camera in self.camera_config]
+        print("Debug: Sorted Camera Angles:", self.camera_angles)
 
     def __del__(self) -> None:
         for cap in self.captures:
             cap.release()
-
-    def load_camera_config(self, filename: str = "camera_config.json") -> None:
-        """
-        Load camera configurations from a JSON file.
-
-        This method reads camera settings like exposure and color temperature from a JSON file.
-
-        :param filename: Name of the JSON file containing camera configurations.
-
-        :raises FileNotFoundError: If the specified JSON file is not found.
-
-        Example:
-            load_camera_config("custom_camera_config.json")
-        """
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-                camera_settings = data.get("CameraSettings", {})
-                self.exposure = camera_settings.get("Camera Exposure", 0)
-                self.color_temp = camera_settings.get("Camera Color Temperature", 0)
-                self.num_cameras = len(data.get("Camera Order", {}))
-        else:
-            logging.warning(f"{filename} not found! Using default camera settings.")
-
-    def load_camera_mapping(self, filename: str = "camera_config.json") -> None:
-        """ """
-        if os.path.exists(filename):
-            with open(filename, "r") as f:
-                data = json.load(f)
-                self.camera_mapping = data.get("Camera Order", {})
-        else:
-            logging.warning(
-                "camera_config.json not found! Please run camera_identifier.py first."
-            )
-
-    def sort_camera_angles(self) -> None:
-        """
-        Sort camera angles based on the loaded camera mapping.
-
-        This method sorts the camera angles based on the camera mapping loaded from the JSON file.
-
-        :raises: TODO Add exceptions.
-
-        Example:
-            sort_camera_angles()
-
-        """
-        if hasattr(self, "camera_mapping"):
-            sorted_angles = [None] * len(self.camera_angles)
-            for identifier, index in self.camera_mapping.items():
-                if identifier == "skip":
-                    if isinstance(index, list):
-                        for i in index:
-                            sorted_angles[i] = "skip"
-                    else:
-                        sorted_angles[index] = "skip"
-                else:
-                    sorted_angles[index] = self.camera_angles[int(identifier)]
-            self.camera_angles = sorted_angles
-            print("Sorted Camera Angles:", self.camera_angles)  # Debugging line
 
     def capture_multiple_images(
         self, folder_path: str, num_pictures_to_take: int
@@ -164,7 +102,10 @@ class CameraManager:
         image_counter = 0
         for _ in range(num_pictures_to_take):
             # Pause here to allow for object adjustment
-            input("Press Enter to continue capturing after adjusting the object...")
+            if self.allow_user_input == True:
+                input("Press Enter to continue capturing after adjusting the object...")
+            else:
+                print("Continuing without user input...\nCapturing the object...")
             for cam_idx, angle in enumerate(self.camera_angles):
                 self.capture_single_image(folder_path, cam_idx, angle, image_counter)
             image_counter += 1
@@ -186,18 +127,26 @@ class CameraManager:
 
         if self.train_images != 0:
             folder_type = "train"
-            input(
-                f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
-            )
+            if self.allow_user_input == True:
+                input(
+                    f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
+                )
+            else:
+                print(f"Continuing without user input...\nCapturing TRAINING images for {self.warehouse.object_name} in {folder_type}:")
+
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.train_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
 
         if self.test_anomaly_images != 0:
             folder_type = "test"
-            input(
-                f"Press Enter to capture images for good object in {folder_type} folder:"
-            )
+            if self.allow_user_input == True:
+                input(
+                    f"Press Enter to capture images for good object in {folder_type} folder:"
+                )
+            else:
+                print(f"Continuing without user input...\nCapturing images for good object in {folder_type} folder:")
+
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.test_anomaly_images)
             logging.info(f"Captured images for good object in {folder_type} folder.")
@@ -246,21 +195,31 @@ class CameraManager:
                 f"Could not read frame from camera {cam_idx} at angle {angle}."
             )
             return
+        
 
-        filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
-        cv2.imwrite(filename, frame)
-        logging.info(f"Saved image {filename}")
+        if self.overwrite_original:
+            filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
+            cv2.imwrite(filename, frame)
+            logging.info(f"Saved image {filename}")
 
+        else:
+            # Find a filename that does not exist yet
+            i = 0
+            while True:
+                potential_filename = os.path.join(angle_folder_path, f"{image_counter + i:03d}.png")
+                if not os.path.exists(potential_filename):
+                    cv2.imwrite(potential_filename, frame)
+                    logging.info(f"Saved image {potential_filename}")
+                    break
+                i += 1
+
+                
     def run(self) -> None:
         """
-        Main function to run the camera capturing process.
-
         This method is the main function to run the camera capturing process. It prompts the user to adjust the object before capturing.
 
         :raises: TODO Add exceptions.
 
-        Example:
-            run()
         """
         print(self.warehouse.anomalies)
 
@@ -270,7 +229,10 @@ class CameraManager:
             os.getcwd(), "data_warehouse", "dataset", self.warehouse.object_name
         )
         for anomaly in self.warehouse.anomalies:
-            input(f"Press Enter to capture images for anomaly: {anomaly}")
+            if self.allow_user_input == True:
+                input(f"Press Enter to capture images for anomaly: {anomaly}")
+            else:
+                print(f"Continuing without user input...\nCapturing images for anomaly: {anomaly}")
             cleaned_anomaly = self.warehouse.clean_folder_name(
                 anomaly
             )  # Clean the anomaly name
@@ -280,9 +242,13 @@ class CameraManager:
             self.capture_multiple_images(anomaly_folder, self.test_anomaly_images)
             logging.info(f"Captured images for anomaly: {anomaly}")
 
+        print("Done.")
+
 
 if __name__ == "__main__":
     warehouse = Warehouse()
     warehouse.build("train_image_test", ["anomaly_1", "anomaly_2"])
+
+    CameraConfigurator()
     camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()
