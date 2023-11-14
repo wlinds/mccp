@@ -29,12 +29,13 @@ class CameraManager:
     """
 
     def __init__(
-        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10, allow_user_input: bool = True
+        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10, allow_user_input: bool = True, overwrite_original: bool = True
     ) -> None:
         self.warehouse: Warehouse = warehouse
         self.test_anomaly_images: int = test_anomaly_images
         self.train_images: int = train_images
         self.allow_user_input: bool = allow_user_input
+        self.overwrite_original: bool = overwrite_original
         self.captures: List = []
         self.load_camera_config()
         self.sort_camera_angles()
@@ -194,11 +195,25 @@ class CameraManager:
                 f"Could not read frame from camera {cam_idx} at angle {angle}."
             )
             return
+        
 
-        filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
-        cv2.imwrite(filename, frame)
-        logging.info(f"Saved image {filename}")
+        if self.overwrite_original:
+            filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
+            cv2.imwrite(filename, frame)
+            logging.info(f"Saved image {filename}")
 
+        else:
+            # Find a filename that does not exist yet
+            i = 0
+            while True:
+                potential_filename = os.path.join(angle_folder_path, f"{image_counter + i:03d}.png")
+                if not os.path.exists(potential_filename):
+                    cv2.imwrite(potential_filename, frame)
+                    logging.info(f"Saved image {potential_filename}")
+                    break
+                i += 1
+
+                
     def run(self) -> None:
         """
         This method is the main function to run the camera capturing process. It prompts the user to adjust the object before capturing.
