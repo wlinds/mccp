@@ -11,11 +11,20 @@ from .utils import allowed_file
 class DataAugmenter:
     def __init__(
         self,
-        object_name="object_name",
-        num_augmented_images=3,
-        temperature=1.0,
-        logging_enabled=True,
+        object_name: str = "object_name",
+        num_augmented_images: int = 3,
+        temperature: float = 1.0,
+        logging_enabled: bool = True,
     ):
+        """
+        Initializes the DataAugmenter with the given parameters.
+
+        Parameters:
+            object_name (str): The name of the object you want to augment images for.
+            num_augmented_images (int): The number of augmented images to generate. Default is 3.
+            temperature (float): A factor influencing the augmentation process. Default is 1.0.
+            logging_enabled (bool): Flag to enable or disable logging. Default is True.
+        """
         self.object_dir = os.path.join(
             os.getcwd(),
             "data_warehouse",
@@ -36,7 +45,18 @@ class DataAugmenter:
                 format="%(asctime)s - %(levelname)s - %(message)s",
             )
 
-    def process_image(self, img, filename, output_subdir):
+    def process_image(self, img: np.array, filename: str, output_subdir: str):
+        """
+        Processes and augments a single image.
+
+        Parameters:
+            img (np.array): The image to be processed.
+            filename (str): The name of the file.
+            output_subdir (str): The directory to save the augmented images.
+
+        Returns:
+            None
+        """
         if not allowed_file(filename):
             logging.error(f"File type not allowed for {filename}")
             return
@@ -83,7 +103,16 @@ class DataAugmenter:
                 logging.info(f"Finished augmentation of {filename} as {output_file}")
                 print(f"Finished augmentation of {filename} as {output_file}")
 
-    def augment_images(self, selected_images=None):
+    def augment_images(self, selected_images: list = None):
+        """
+        Augments images in the specified directory.
+
+        Parameters:
+            selected_images (list): A list of selected images to augment. If None, all images in the directory are used. Default is None.
+
+        Returns:
+            None
+        """
         print("augment_images_running")
         subdirs = [
             d
@@ -218,13 +247,7 @@ class DataAugmenter:
         Returns:
             np.array: The image with random pixels set to black.
         """
-
-        # Adjust dropout percentage based on temperature
-        # For example, let's assume temperature ranges from 0 to 1.
-        # You can adjust the range and logic as needed.
-        dropout_percentage = (
-            self.temperature * 0.0001
-        )  # Here, 0.01 is the base dropout and we adjust it by temperature up to 11%.
+        dropout_percentage = self.temperature * 0.001
 
         # Calculate the number of pixels to drop
         total_pixels = img.shape[0] * img.shape[1]

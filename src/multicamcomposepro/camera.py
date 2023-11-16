@@ -17,11 +17,18 @@ class CameraManager:
     """
     Simultaneous capture train and test images.
 
-    :param warehouse: Warehouse object with directory structure.
-    :param test_anomaly_images: Number of test anomaly images to capture.
-    :param train_images: Number of training images to capture.
+    Attributes:
+        warehouse (Warehouse): Warehouse object with directory structure.
+        test_anomaly_images (int): Number of test anomaly images to capture.
+        train_images (int): Number of training images to capture.
+        allow_user_input (bool): Whether to allow user input during capture.
+        overwrite_original (bool): Whether to overwrite original images.
+        captures (List[cv2.VideoCapture]): List of camera capture objects.
+        camera_config (List[dict]): Configuration for each camera.
+        camera_angles (List[str]): Sorted list of camera angles.
 
-    :raises: TODO Add exceptions.
+    Raises:
+        TODO: Add exceptions.
 
     Example:
         warehouse = Warehouse()
@@ -29,7 +36,12 @@ class CameraManager:
     """
 
     def __init__(
-        self, warehouse: Warehouse, test_anomaly_images: int = 5, train_images: int = 10, allow_user_input: bool = True, overwrite_original: bool = True
+        self,
+        warehouse: Warehouse,
+        test_anomaly_images: int = 5,
+        train_images: int = 10,
+        allow_user_input: bool = True,
+        overwrite_original: bool = True,
     ) -> None:
         self.warehouse: Warehouse = warehouse
         self.test_anomaly_images: int = test_anomaly_images
@@ -65,6 +77,15 @@ class CameraManager:
             self.captures.append(cap)
 
     def load_camera_config(self, filename: str = "camera_config.json") -> None:
+        """
+        Load camera configuration from a JSON file.
+
+        Args:
+            filename (str): The name of the configuration file. Defaults to "camera_config.json".
+
+        Raises:
+            FileNotFoundError: If the specified file does not exist.
+        """
         if os.path.exists(filename):
             with open(filename, "r") as f:
                 self.camera_config = json.load(f)
@@ -132,7 +153,9 @@ class CameraManager:
                     f"Press Enter to capture TRAINING images for {self.warehouse.object_name} in {folder_type}:"
                 )
             else:
-                print(f"Continuing without user input...\nCapturing TRAINING images for {self.warehouse.object_name} in {folder_type}:")
+                print(
+                    f"Continuing without user input...\nCapturing TRAINING images for {self.warehouse.object_name} in {folder_type}:"
+                )
 
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.train_images)
@@ -145,7 +168,9 @@ class CameraManager:
                     f"Press Enter to capture images for good object in {folder_type} folder:"
                 )
             else:
-                print(f"Continuing without user input...\nCapturing images for good object in {folder_type} folder:")
+                print(
+                    f"Continuing without user input...\nCapturing images for good object in {folder_type} folder:"
+                )
 
             good_folder = os.path.join(base_dir, folder_type, "good")
             self.capture_multiple_images(good_folder, self.test_anomaly_images)
@@ -195,7 +220,6 @@ class CameraManager:
                 f"Could not read frame from camera {cam_idx} at angle {angle}."
             )
             return
-        
 
         if self.overwrite_original:
             filename = os.path.join(angle_folder_path, f"{image_counter:03d}.png")
@@ -206,14 +230,15 @@ class CameraManager:
             # Find a filename that does not exist yet
             i = 0
             while True:
-                potential_filename = os.path.join(angle_folder_path, f"{image_counter + i:03d}.png")
+                potential_filename = os.path.join(
+                    angle_folder_path, f"{image_counter + i:03d}.png"
+                )
                 if not os.path.exists(potential_filename):
                     cv2.imwrite(potential_filename, frame)
                     logging.info(f"Saved image {potential_filename}")
                     break
                 i += 1
 
-                
     def run(self) -> None:
         """
         This method is the main function to run the camera capturing process. It prompts the user to adjust the object before capturing.
@@ -232,7 +257,9 @@ class CameraManager:
             if self.allow_user_input == True:
                 input(f"Press Enter to capture images for anomaly: {anomaly}")
             else:
-                print(f"Continuing without user input...\nCapturing images for anomaly: {anomaly}")
+                print(
+                    f"Continuing without user input...\nCapturing images for anomaly: {anomaly}"
+                )
             cleaned_anomaly = self.warehouse.clean_folder_name(
                 anomaly
             )  # Clean the anomaly name
@@ -253,6 +280,7 @@ if __name__ == "__main__":
     camera_manager = CameraManager(warehouse, test_anomaly_images=5, train_images=10)
     camera_manager.run()
 
+
 class QuickCapture(CameraManager):
     """Instantly capture images from all connected cameras
     Args:
@@ -260,8 +288,14 @@ class QuickCapture(CameraManager):
         folder_name (str, optional): Defaults to "MCCP_QC".
         n_cameras (int, optional): Defaults to 5.
     """
-    def __init__(self, folder_path: Optional[str] = None, folder_name: str = "MCCP_QC", n_cameras: int = 5) -> None:
-        super().__init__(allow_user_input = False, warehouse=None)
+
+    def __init__(
+        self,
+        folder_path: Optional[str] = None,
+        folder_name: str = "MCCP_QC",
+        n_cameras: int = 5,
+    ) -> None:
+        super().__init__(allow_user_input=False, warehouse=None)
 
         self.n_cameras = n_cameras
         if folder_path is None:
@@ -273,6 +307,10 @@ class QuickCapture(CameraManager):
 
     def capture(self) -> None:
         for i in range(self.n_cameras):
-            self.capture_single_image(folder_path=self.folder_path, cam_idx=i, angle="MCCP_QC", image_counter=1, overwrite_original=False)
-
-
+            self.capture_single_image(
+                folder_path=self.folder_path,
+                cam_idx=i,
+                angle="MCCP_QC",
+                image_counter=1,
+                overwrite_original=False,
+            )

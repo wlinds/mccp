@@ -10,7 +10,13 @@ from PIL import Image
 from tqdm import tqdm
 
 
-def view_camera(camera_index=0):
+def view_camera(camera_index: int =0) -> None:
+    """
+    Display the camera feed for a specified camera.
+
+    Args:
+        camera_index (int): Index of the camera to view. Defaults to 0.
+    """
     cap = wcap(camera_index)
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 12)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 7)
@@ -25,7 +31,16 @@ def view_camera(camera_index=0):
 
 
 # Use CAP_DSHOW on Windows
-def wcap(i=None):
+def wcap(i: Optional[int]=None):
+    """
+    Wrapper for cv2.VideoCapture to handle platform-specific settings.
+
+    Args:
+        i (Optional[int]): Index of the camera. Defaults to None.
+
+    Returns:
+        cv2.VideoCapture: The video capture object.
+    """
     if system() != "Windows":
         return cv2.VideoCapture(i)
     else:
@@ -48,7 +63,15 @@ VALID_RESOLUTIONS = ["400 x 400", "640 x 480", "800 x 640", "800 x 800"]
 
 
 class CameraConfigurator:
-    def __init__(self, n_cameras: int = 10):
+    """
+    Configurator for camera settings.
+
+    Attributes:
+        max_usb_connection (int): Maximum number of USB connections to check.
+        camera_mapping (Dict[int, Any]): Mapping of camera indices to their settings.
+        camera_settings (Dict[int, Dict[str, Any]]): Settings for each camera.
+    """
+    def __init__(self, n_cameras: int = 10) -> None:
         self.max_usb_connection: int = n_cameras
         self.camera_mapping: dict = {}
         self.camera_settings: dict = {}
@@ -240,7 +263,17 @@ class Warehouse:
         return ret
 
 
-def allowed_file(filename, allowed_extensions=("png", "jpg", "jpeg")):
+def allowed_file(filename, allowed_extensions: Tuple[str, ...]=("png", "jpg", "jpeg")):
+    """
+    Check if a file has an allowed extension.
+
+    Args:
+        filename (str): The name of the file to check.
+        allowed_extensions (Tuple[str, ...]): Allowed file extensions. Defaults to ("png", "jpg", "jpeg").
+
+    Returns:
+        bool: True if the file has an allowed extension, False otherwise.
+    """
     if "." not in filename:
         return False
     ext = filename.rsplit(".", 1)[1].lower()
@@ -248,8 +281,17 @@ def allowed_file(filename, allowed_extensions=("png", "jpg", "jpeg")):
 
 
 def batch_resize(
-    root_input_dir, root_output_dir, target_size=(224, 224), overwrite_original=False
-):
+    root_input_dir: str, root_output_dir: str, target_size: Tuple[int, int]=(224, 224), overwrite_original: bool=False
+) -> None:
+    """
+    Batch resize images in a directory.
+
+    Args:
+        root_input_dir (str): Directory containing the original images.
+        root_output_dir (str): Directory to save the resized images.
+        target_size (Tuple[int, int]): The target size for resizing. Defaults to (224, 224).
+        overwrite_original (bool): Whether to overwrite the original images. Defaults to False.
+    """
     n = 0
     for dirpath, dirnames, filenames in os.walk(root_input_dir):
         relative_dir = os.path.relpath(dirpath, root_input_dir)
