@@ -1,0 +1,17 @@
+site_name: Multi Cam Compose Pro
+
+theme: material
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+
+
+nav:
+  - Overview: index.md
+  - Augmentation: augmentation.md
+  - Camera Manager: cameramanager.md
+  - Utils: utils.md
+
+

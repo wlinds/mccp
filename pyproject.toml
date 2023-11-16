@@ -17,7 +17,7 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
-dependencies = ["opencv-python", "numpy", "pytest >= 3"]
+dependencies = ["opencv-python", "numpy", "mkdocstrings[python]>=0.18", "mkdocs", "mkdocs-material", "pytest >= 3"]
 
 [project.urls]
 "Homepage" = "https://github.com/wlinds/mccp"

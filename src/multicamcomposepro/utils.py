@@ -10,7 +10,7 @@ from PIL import Image
 from tqdm import tqdm
 
 
-def view_camera(camera_index: int =0) -> None:
+def view_camera(camera_index: int = 0) -> None:
     """
     Display the camera feed for a specified camera.
 
@@ -31,7 +31,7 @@ def view_camera(camera_index: int =0) -> None:
 
 
 # Use CAP_DSHOW on Windows
-def wcap(i: Optional[int]=None):
+def wcap(i: Optional[int] = None):
     """
     Wrapper for cv2.VideoCapture to handle platform-specific settings.
 
@@ -71,6 +71,7 @@ class CameraConfigurator:
         camera_mapping (Dict[int, Any]): Mapping of camera indices to their settings.
         camera_settings (Dict[int, Dict[str, Any]]): Settings for each camera.
     """
+
     def __init__(self, n_cameras: int = 10) -> None:
         self.max_usb_connection: int = n_cameras
         self.camera_mapping: dict = {}
@@ -218,6 +219,31 @@ class Warehouse:
         object_name: str = "default2_object",
         anomalies: Optional[List[str]] = ["Anomaly1", "Anomaly2", "Anomaly3"],
     ):
+        """
+        Constructs the directory structure for a given object and its anomalies.
+
+        This method creates a base directory, a dataset directory, and specific subdirectories
+        for training and testing data. It organizes the data into 'good' and 'anomaly' categories
+        based on the provided anomalies list.
+
+        Parameters:
+            object_name (str): The name of the object for which the directory structure is being built.
+                               Defaults to 'default2_object'.
+            anomalies (Optional[List[str]]): A list of anomaly names to be included in the test dataset.
+                                             Defaults to ['Anomaly1', 'Anomaly2', 'Anomaly3'].
+
+        The directory structure is created as follows:
+        - data_warehouse/
+            - dataset/
+                - [object_name]/
+                    - train/
+                        - good/
+                    - test/
+                        - good/
+                        - [anomaly1]/
+                        - [anomaly2]/
+                        - [anomaly3]/
+        """
         self.object_name = self.clean_folder_name(object_name)
         base_dir_path = os.path.join(os.getcwd(), "data_warehouse")
         dataset_dir_path = os.path.join(base_dir_path, "dataset")
@@ -263,7 +289,9 @@ class Warehouse:
         return ret
 
 
-def allowed_file(filename, allowed_extensions: Tuple[str, ...]=("png", "jpg", "jpeg")):
+def allowed_file(
+    filename, allowed_extensions: Tuple[str, ...] = ("png", "jpg", "jpeg")
+):
     """
     Check if a file has an allowed extension.
 
@@ -281,7 +309,10 @@ def allowed_file(filename, allowed_extensions: Tuple[str, ...]=("png", "jpg", "j
 
 
 def batch_resize(
-    root_input_dir: str, root_output_dir: str, target_size: Tuple[int, int]=(224, 224), overwrite_original: bool=False
+    root_input_dir: str,
+    root_output_dir: str,
+    target_size: Tuple[int, int] = (224, 224),
+    overwrite_original: bool = False,
 ) -> None:
     """
     Batch resize images in a directory.
