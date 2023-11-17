@@ -111,7 +111,8 @@ class CameraManager:
         :param folder_path: Directory where the captured images will be saved.
         :param num_pictures_to_take: Number of pictures to capture.
 
-        :raises SomeException: If capturing fails.
+        Raises:
+            SomeException: If capturing fails.
 
         Example:
             capture_multiple_images("/path/to/save", 5)
@@ -137,7 +138,8 @@ class CameraManager:
 
         This method captures both training and test images for good objects. It prompts the user to adjust the object before capturing.
 
-        :raises: TODO Add exceptions.
+        Raises:
+            TODO Add exceptions.
 
         Example:
             capture_good_object()
@@ -243,7 +245,8 @@ class CameraManager:
         """
         This method is the main function to run the camera capturing process. It prompts the user to adjust the object before capturing.
 
-        :raises: TODO Add exceptions.
+        Raises: 
+            TODO Add exceptions.
 
         """
         print(self.warehouse.anomalies)

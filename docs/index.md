@@ -1,38 +1,106 @@
 # Welcome to Multi Cam Compose Pro
 
-For full documentation visit [our GitHub](https://github.com/wlinds/mccp).
 
-Multi Cam Compose Pro (MCCP) is a powerful tool designed to streamline and enhance multi-camera video composition workflows. It offers a range of features and functionalities to make multi-camera video editing more efficient and user-friendly.
+## Overview
+- Multi Cam Compose Pro (MCCP) is a powerful tool designed to streamline and enhance multi-camera video composition workflows. It offers a range of features and functionalities to make multi-camera video editing more efficient and user-friendly.
 
 ## Features
 
-- **Automated Camera Switching:** Automatically switch between different camera feeds based on predefined criteria.
-- **Real-Time Video Processing:** Process and compose video feeds in real-time for immediate output.
-- **Customizable Workflows:** Tailor the tool to fit specific project needs and workflows.
-- **Data Augmentation:** Enhance your machine learning models with augmented image data.
+- This project aims to capture images of objects from multiple camera angles and detect anomalies. It uses OpenCV for image capturing and provides a modular approach to manage camera configurations and image storage.
 
 ## Getting Started
 
-To get started with MCCP, you can use the following commands:
+# MultiCamComposePro - Manage multiple cameras in Python
+## MCCP
 
-- `mkdocs new [dir-name]`: Create a new MkDocs project.
-- `mkdocs serve`: Start the live-reloading docs server.
-- `mkdocs build`: Build the documentation site.
-- `mkdocs -h`: Print help message and exit.
 
-## Project Layout
+### Requirements
 
-The MCCP project is structured as follows:
+    - Python 3.10
+    - OpenCV
+    - JSON for configuration
+    - mkdocs, mkdocstrings, mkdocs-material
+    - pytest
+
+### Installation
+
+1. Install package:
+
+```bash
+pip install mccp
+```
+
+
+## Usage
+
+Run the main.py script to start the application:
+
+    python main.py
+
+## Modules
+### camera.py
+
+    Class: CameraManager
+        Manage and capture images.
+        Load camera configurations from JSON file.
+        Sort and display camera angles based on configuration.
+
+### main.py
+
+    Function: main()
+        Run camera identification, configuration, and image capturing process.
+
+### augment.py
+    Class: DataAugmenter
+        Create synthetic data from captured images.
+
+### utils.py
+
+    Class: Warehouse
+        Manage object names and setup directories.
+
+    Class: CameraConfigurator
+        Find and configure all connected cameras.
+        Configure exposure and white balance.
+
+    Function: batch_resize()
+        Post-capture resize.
+
+    Function: wcap():
+        Allow optimized image capture on Windows OS.
+
+    Function: view_camera()
+        View camera feed for any connected camera.
+
+### Configuration
+
+    camera_config.json: Holds the camera settings and order.
+
+## Documentation
+
+For full documentation run:
+
+```bash
+cd path/to/mccp
+mkdocs serve
+```
+
+## Contact
+
+PyPi page: [MCCP](https://pypi.org/project/mccp/)  
+Github: [our GitHub](https://github.com/wlinds/mccp)
 
 
 ## Contributing
 
-We welcome contributions to the MCCP project! If you're interested in contributing, please check out our [contribution guidelines](https://github.com/wlinds/mccp/CONTRIBUTING.md).
+We welcome contributions to the MCCP project! If you're interested in contributing, please checkout the information [here.](https://github.com/wlinds/mccp/blob/main/CONTRIBUTING.md)
+
 
 ## Support
 
 If you encounter any issues or have questions, please file them on our [GitHub issues page](https://github.com/wlinds/mccp/issues).
 
-## License
 
-MCCP is released under the [MIT License](https://github.com/wlinds/mccp/LICENSE).
+### License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

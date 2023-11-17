@@ -40,6 +40,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://www.github.com/wlinds/mccp",
-    version="0.1.6",
+    version="0.2.0",
     zip_safe=False,
 )

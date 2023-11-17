@@ -2,7 +2,7 @@ import json
 import os
 import threading
 from platform import system
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Tuple
 
 import cv2
 import numpy as np
