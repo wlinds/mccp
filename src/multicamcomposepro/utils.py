@@ -155,11 +155,6 @@ class CameraConfigurator:
             json.dump(data, f, indent=4)
         print("Camera settings saved.")
 
-
-if __name__ == "__main__":
-    cc = CameraConfigurator()
-
-
 class Warehouse:
     """
     Class for building a structurized data warehouse for train|test images.
@@ -199,8 +194,10 @@ class Warehouse:
         base_dir_path = os.path.join(os.getcwd(), "data_warehouse")
         dataset_dir_path = os.path.join(base_dir_path, "dataset")
         object_dir_path = os.path.join(dataset_dir_path, self.object_name)
+        plots_path = os.path.join(base_dir_path, "plots")
+        distributions_path = os.path.join(base_dir_path, "distribution")
 
-        for path in [base_dir_path, dataset_dir_path, object_dir_path]:
+        for path in [base_dir_path, dataset_dir_path, object_dir_path, plots_path, distributions_path]:
             self.create_directory(path)
 
         self.anomalies = anomalies
@@ -298,5 +295,5 @@ def batch_resize(
 
 if __name__ == "__main__":
     w = Warehouse()
-    w.build("Object", ["Anomaly1", "Anomaly2", "Anomaly3"])
+    w.build("Object", [])
     print(w)
